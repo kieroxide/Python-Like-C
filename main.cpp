@@ -33,17 +33,21 @@ std::vector<std::string> splitByNewline(const std::string& input) {
 int main(){
     std::string filename = "C:/Users/bailk/Desktop/Programs/Github-Projects/Python-Like/Python-Like-C/test.txt";
     std::string fileContents = readFile(filename);
-    std::cout << fileContents; 
-
+    
     auto lines = splitByNewline(fileContents);
-    int lineNumber = 1;
+    
     Interpreter* interpreter = new Interpreter(); 
+
+    int lineNumber = 1;
     for(const auto& line: lines){
         std::vector<lexer::Token> tokens = lexer::tokenize(line, lineNumber);
         //lexer::printTokens(tokens);
+
         auto program = parser::parse(tokens);
         //parser::printAST(program);
+
         interpreter->evaluate(program);
+
         std::cout << "\n";
         lineNumber++;
     }

@@ -22,33 +22,28 @@ namespace parser {
                 printStmt->addChild(statement);
                 return printStmt;
             }
-            //else if(token.type == lexer::TokenType::IDENTIFIER){
-            //    auto identifier = std::make_unique<Node>();
-            //    identifier->token = token;
-            //    identifier->type = NodeType::ASSIGN_STATEMENT;
-            //    auto statement = parse(tokens, pos);
-            //    identifier->addChild(statement);
-            //    stmt = std::move(identifier);
-            //}
-            //else if(token.type == lexer::TokenType::ASSIGN){
-            //    auto assign = std::make_unique<Node>();
-            //    assign->token = token;
-            //    assign->type = NodeType::OPERATOR;
-            //}
-
+            else if(token.type == lexer::TokenType::IDENTIFIER){
+                auto identifier = std::make_unique<Node>();
+                identifier->token = token;
+                identifier->type = NodeType::ASSIGN_STATEMENT;
+                auto statement = parseIdentifier(tokens, pos);
+                identifier->addChild(statement);
+                return identifier;
+            }
         }
     }
-
+    std::unique_ptr<Node> parseIdentifier(const std::vector<lexer::Token>& tokens, int& pos){
+        lexer::Token token = tokens[pos++];
+        return parseExpression(tokens, pos);
+    }
     std::unique_ptr<Node> parsePrint(const std::vector<lexer::Token>& tokens, int& pos){
-        lexer::Token token = tokens[pos];
-        std::unique_ptr<Node> node;
-        node = parseExpression(tokens, pos);
+        std::unique_ptr<Node> node = parseExpression(tokens, pos);
         return node;
     }
 
     std::unique_ptr<Node> parseExpression(const std::vector<lexer::Token>& tokens, int& pos){
         auto node = parseTerm(tokens, pos);
-        while(pos < tokens.size() && tokens[pos].type == lexer::TokenType::PLUS){
+        while(pos < tokens.size() && (tokens[pos].type == lexer::TokenType::PLUS || tokens[pos].type == lexer::TokenType::SUBTRACT)){
             lexer::Token token = tokens[pos++];
             auto op = std::make_unique<Node>();
             op->token = token;
@@ -65,7 +60,7 @@ namespace parser {
 
     std::unique_ptr<Node> parseTerm(const std::vector<lexer::Token>& tokens, int& pos){
         auto node = parseFactor(tokens, pos);
-        while(pos < tokens.size() && tokens[pos].type == lexer::TokenType::MULTIPLY){
+        while(pos < tokens.size() && (tokens[pos].type == lexer::TokenType::MULTIPLY || tokens[pos].type == lexer::TokenType::DIVIDE)){
             lexer::Token token = tokens[pos++];
             auto op = std::make_unique<Node>();
             op->token = token;

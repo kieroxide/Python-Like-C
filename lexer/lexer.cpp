@@ -9,7 +9,7 @@ namespace lexer{
         for(Token t : tokens){
             std::cout << "\nLine Number: " << t.lineNumber << ", " 
             << "Type: "<< static_cast<int>(t.type) << ", " 
-            << "Value: " << t.value;
+            << "Value: " << t.value << "\n";
         }
     }
 
@@ -40,6 +40,21 @@ namespace lexer{
             else if(c == '+'){
                 std::string str = "+";
                 Token token = {TokenType::PLUS, str, lineNumber};
+                tokens.push_back(token);
+            }
+            else if(c == '-'){
+                std::string str = "-";
+                Token token = {TokenType::SUBTRACT, str, lineNumber};
+                tokens.push_back(token);
+            }
+            else if(c == '*'){
+                std::string str = "*";
+                Token token = {TokenType::MULTIPLY, str, lineNumber};
+                tokens.push_back(token);
+            }
+            else if(c == '/'){
+                std::string str = "/";
+                Token token = {TokenType::DIVIDE, str, lineNumber};
                 tokens.push_back(token);
             }
             
