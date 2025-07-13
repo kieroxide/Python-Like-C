@@ -5,6 +5,7 @@
 #include <vector>
 #include "lexer/lexer.hpp"
 #include "parser/parser.hpp"
+#include "interpreter/interpreter.hpp"
 
 std::string readFile(const std::string& filename) {
     std::ifstream file(filename);
@@ -36,12 +37,15 @@ int main(){
 
     auto lines = splitByNewline(fileContents);
     int lineNumber = 1;
+    Interpreter* interpreter = new Interpreter(); 
     for(const auto& line: lines){
         std::vector<lexer::Token> tokens = lexer::tokenize(line, lineNumber);
-        lexer::printTokens(tokens);
+        //lexer::printTokens(tokens);
         auto program = parser::parse(tokens);
-        parser::printAST(program);
+        //parser::printAST(program);
+        interpreter->evaluate(program);
         std::cout << "\n";
         lineNumber++;
     }
+    delete interpreter;
 }
