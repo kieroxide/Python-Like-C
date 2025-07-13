@@ -2,7 +2,8 @@
 #include <string>
 #include <memory>
 #include <vector>
-#include "lexer/lexer.hpp"
+#include "../lexer/lexer.hpp"
+
 namespace parser{
     enum class NodeType{
             PROGRAM,
@@ -26,6 +27,10 @@ namespace parser{
         }
     };
 
+    std::unique_ptr<Node> parse(const std::vector<lexer::Token>& tokens);
     std::unique_ptr<Node> parsePrint(const std::vector<lexer::Token>& tokens, int& pos);
-    std::unique_ptr<Node> parse(const std::vector<lexer::Token>& tokens, int& pos);
+    std::unique_ptr<Node> parseExpression(const std::vector<lexer::Token>& tokens, int& pos);
+    std::unique_ptr<Node> parseTerm(const std::vector<lexer::Token>& tokens, int& pos);
+    std::unique_ptr<Node> parseFactor(const std::vector<lexer::Token>& tokens, int& pos);
+    void printAST(const std::unique_ptr<Node>& node, int indent = 0);
 }

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include "lexer/lexer.hpp"
+#include "parser/parser.hpp"
 
 std::string readFile(const std::string& filename) {
     std::ifstream file(filename);
@@ -38,6 +39,8 @@ int main(){
     for(const auto& line: lines){
         std::vector<lexer::Token> tokens = lexer::tokenize(line, lineNumber);
         lexer::printTokens(tokens);
+        auto program = parser::parse(tokens);
+        parser::printAST(program);
         std::cout << "\n";
         lineNumber++;
     }

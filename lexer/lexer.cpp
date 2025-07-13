@@ -1,5 +1,4 @@
 #include "lexer.hpp"
-
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -19,6 +18,9 @@ namespace lexer{
         int len = code.size();
 
         for(int i = 0; i < len; i++){
+            if(i >= len){
+                break;
+            }
             char c = code[i];
             if(isalpha(c)){
                 Token token = tokenizeAlpha(c, i, code);
@@ -48,16 +50,11 @@ namespace lexer{
     Token tokenizeAlpha(char c, int& i, const std::string& code){
         std::string str;
         str.push_back(c);
-        do{
-            if(i == code.size()){
-                break;
-            }
+        while(i+1 < code.size() && isalpha(code[i+1])){
             i++;
             c = code[i];
             str.push_back(c);   
         }
-        while(i < code.size() && isalpha(c));
-        i--;
         Token token;
         if(str == "print"){
             token.type = TokenType::PRINT;
@@ -70,17 +67,11 @@ namespace lexer{
     Token tokenizeDigit(char c, int& i, const std::string& code){
         std::string str;
         str.push_back(c);
-        do{
-            if(i == code.size()){
-                break;
-            }
+        while(i+1 < code.size() && isdigit(code[i+1])){
             i++;
             c = code[i];
             str.push_back(c);   
         }
-        while(i < code.size() && isdigit(c));
-        i--;
-
         Token token;
         token.type = TokenType::NUMBER;
         token.value = str;
