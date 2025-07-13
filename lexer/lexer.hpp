@@ -21,10 +21,10 @@ namespace lexer {
     struct Token{
         TokenType type;
         std::string value;
-        int line_number;
+        int lineNumber;
     };
     Token tokenizeAlpha(char c, int& i, const std::string& code);
     Token tokenizeDigit(char c, int& i, const std::string& code);
     void printTokens(std::vector<Token> tokens);
-    std::vector<Token> tokenize(const std::string& code);
+    std::vector<Token> tokenize(const std::string& code, int& lineNumber);
 }

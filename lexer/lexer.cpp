@@ -8,36 +8,36 @@
 namespace lexer{
     void printTokens(std::vector<Token> tokens){
         for(Token t : tokens){
-            std::cout << "\nLine Number: " << t.line_number << ", " 
+            std::cout << "\nLine Number: " << t.lineNumber << ", " 
             << "Type: "<< static_cast<int>(t.type) << ", " 
-            << "Value: " << t.value ;
+            << "Value: " << t.value;
         }
     }
 
-    std::vector<Token> tokenize(const std::string& code){
+    std::vector<Token> tokenize(const std::string& code, int& lineNumber){
         std::vector<Token> tokens;
         int len = code.size();
-        int line_number = 1;
 
         for(int i = 0; i < len; i++){
             char c = code[i];
-            if(c == '\n'){
-                line_number++;
-                continue;
-            }
-            else if(isalpha(c)){
+            if(isalpha(c)){
                 Token token = tokenizeAlpha(c, i, code);
-                token.line_number = line_number;
+                token.lineNumber = lineNumber;
                 tokens.push_back(token);
             }
             else if(isdigit(c)){
                 Token token = tokenizeDigit(c, i, code);
-                token.line_number = line_number;
+                token.lineNumber = lineNumber;
                 tokens.push_back(token);
             }
             else if(c == '='){
                 std::string str = "=";
-                Token token = {TokenType::ASSIGN, str, line_number};
+                Token token = {TokenType::ASSIGN, str, lineNumber};
+                tokens.push_back(token);
+            }
+            else if(c == '+'){
+                std::string str = "+";
+                Token token = {TokenType::PLUS, str, lineNumber};
                 tokens.push_back(token);
             }
             
@@ -80,7 +80,7 @@ namespace lexer{
         }
         while(i < code.size() && isdigit(c));
         i--;
-        
+
         Token token;
         token.type = TokenType::NUMBER;
         token.value = str;

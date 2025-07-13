@@ -16,11 +16,29 @@ std::string readFile(const std::string& filename) {
     return buffer.str();
 }
 
+std::vector<std::string> splitByNewline(const std::string& input) {
+    std::vector<std::string> lines;
+    std::stringstream ss(input);
+    std::string line;
+
+    while (std::getline(ss, line)) {
+        lines.push_back(line);
+    }
+
+    return lines;
+}
+
 int main(){
     std::string filename = "C:/Users/bailk/Desktop/Programs/Github-Projects/Python-Like/Python-Like-C/test.txt";
     std::string fileContents = readFile(filename);
     std::cout << fileContents; 
 
-    std::vector<lexer::Token> tokens = lexer::tokenize("hello = 5\nprint x");
-    lexer::printTokens(tokens);
+    auto lines = splitByNewline(fileContents);
+    int lineNumber = 1;
+    for(const auto& line: lines){
+        std::vector<lexer::Token> tokens = lexer::tokenize(line, lineNumber);
+        lexer::printTokens(tokens);
+        std::cout << "\n";
+        lineNumber++;
+    }
 }
