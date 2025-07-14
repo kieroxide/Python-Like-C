@@ -51,12 +51,14 @@ std::string getBlock(std::vector<std::string>& lines, int& i, int& lineNumber ){
     return block;
 }
 
-int main(){
+int main(int argc, char* argv[]){
     std::string filename = "test.txt";
+    if(argc > 1){
+        filename = argv[1];
+    }
     std::string fileContents = readFile(filename);
-    
     auto lines = splitByNewline(fileContents);
-    
+
     Interpreter* interpreter = new Interpreter(); 
 
     int lineNumber = 1;
@@ -65,17 +67,13 @@ int main(){
     main->value = "MAIN";
     for(int i = 0; i < lines.size(); i++){  
         auto block = getBlock(lines, i, lineNumber);
-        std::vector<lexer::Token> tokens = lexer::tokenize(block, lineNumber);
-        //lexer::printTokens(tokens);
 
+        std::vector<lexer::Token> tokens = lexer::tokenize(block, lineNumber);
         auto program = parser::parseStatement(tokens);
-        //parser::printAST(program);
         main->addChild(std::move(program));
         
-        std::cout << "\n";
         lineNumber++;
     }
-    parser::printAST(main);
     interpreter->evaluate(main);
     delete interpreter;
 }
