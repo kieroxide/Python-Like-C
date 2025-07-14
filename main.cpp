@@ -24,14 +24,35 @@ std::vector<std::string> splitByNewline(const std::string& input) {
     std::string line;
 
     while (std::getline(ss, line)) {
-        lines.push_back(line);
+        if(!line.empty()){
+            lines.push_back(line);
+        }
     }
 
     return lines;
 }
 
+bool isIndent(std::string line){
+    bool isIndented = true;
+    for(int i = 0; i < 4; i++){
+        if(line[i] != ' '){
+            isIndented = false;
+        }
+    }
+    return isIndented;
+}
+
+std::string getBlock(std::vector<std::string>& lines, int& i, int& lineNumber ){
+    std::string block = lines[i];
+    while(i+1 < lines.size() && isIndent(lines[i+1])){
+        block += lines[i+1];
+        i++;
+    }
+    return block;
+}
+
 int main(){
-    std::string filename = "C:/Users/Owner/Desktop/Programs/Github/Python-Like-C/test.txt";
+    std::string filename = "test.txt";
     std::string fileContents = readFile(filename);
     
     auto lines = splitByNewline(fileContents);
@@ -39,17 +60,22 @@ int main(){
     Interpreter* interpreter = new Interpreter(); 
 
     int lineNumber = 1;
-    for(const auto& line: lines){
-        std::vector<lexer::Token> tokens = lexer::tokenize(line, lineNumber);
-        lexer::printTokens(tokens);
+    std::unique_ptr<parser::Node> main = std::make_unique<parser::Node>();;
+    main->type = parser::NodeType::PROGRAM;
+    main->value = "MAIN";
+    for(int i = 0; i < lines.size(); i++){  
+        auto block = getBlock(lines, i, lineNumber);
+        std::vector<lexer::Token> tokens = lexer::tokenize(block, lineNumber);
+        //lexer::printTokens(tokens);
 
-        auto program = parser::parse(tokens);
-        parser::printAST(program);
-
-        //interpreter->evaluate(program);
-
+        auto program = parser::parseStatement(tokens);
+        //parser::printAST(program);
+        main->addChild(std::move(program));
+        
         std::cout << "\n";
         lineNumber++;
     }
+    parser::printAST(main);
+    interpreter->evaluate(main);
     delete interpreter;
 }

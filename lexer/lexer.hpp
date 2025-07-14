@@ -7,6 +7,8 @@ namespace lexer {
     enum class TokenType{
         //Style
         INDENT,
+        NEWLINE,
+        BLOCK,
         //Reserved Words
         PRINT,
         IF,
@@ -29,6 +31,8 @@ namespace lexer {
         std::string value;
         int lineNumber;
     };
+    std::vector<Token> tokenize(const std::string& code, int& lineNumber);
+    std::vector<Token> tokenize_statement(const std::string& code, int& lineNumber);
     Token tokenizeAlpha(char c, int& i, const std::string& code);
     Token tokenizeDigit(char c, int& i, const std::string& code);
     void printTokens(std::vector<Token> tokens);

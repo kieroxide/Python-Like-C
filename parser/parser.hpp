@@ -9,7 +9,9 @@ namespace parser{
             PROGRAM,
             ASSIGN,
             PRINT,
+            BLOCK,
             IF,
+            CONDITIONAL,
             OPERATOR,
             VARIABLE,
             NUMBER
@@ -23,17 +25,18 @@ namespace parser{
 
         std::string value;
 
-        void addChild(std::unique_ptr<Node>& child) {
+        void addChild(std::unique_ptr<Node> child) {
             children.push_back(std::move(child));
         }
     };
 
-    std::unique_ptr<Node> parse(const std::vector<lexer::Token>& tokens);
+    std::unique_ptr<Node> parseStatement(const std::vector<lexer::Token>& tokens);
 
     std::unique_ptr<Node> parsePrint(const std::vector<lexer::Token>& tokens, int& pos);
     std::unique_ptr<Node> parseIdentifier(const std::vector<lexer::Token>& tokens, int& pos);
     std::unique_ptr<Node> parseIf(const std::vector<lexer::Token>& tokens, int& pos);
-
+    
+    std::unique_ptr<Node> parseConditional(const std::vector<lexer::Token>& tokens, int& pos);
     std::unique_ptr<Node> parseExpression(const std::vector<lexer::Token>& tokens, int& pos);
     std::unique_ptr<Node> parseTerm(const std::vector<lexer::Token>& tokens, int& pos);
     std::unique_ptr<Node> parseFactor(const std::vector<lexer::Token>& tokens, int& pos);

@@ -5,6 +5,18 @@
 #include <iostream>
 
 namespace lexer{
+    std::vector<std::string> splitByNewline(const std::string& input) {
+        std::vector<std::string> lines;
+        std::stringstream ss(input);
+        std::string line;
+
+        while (std::getline(ss, line)) {
+            lines.push_back(line);
+        }
+
+        return lines;
+    }
+
     void printTokens(std::vector<Token> tokens){
         for(Token t : tokens){
             std::cout << "Line Number: " << t.lineNumber << ", " 
@@ -15,16 +27,29 @@ namespace lexer{
 
     std::vector<Token> tokenize(const std::string& code, int& lineNumber){
         std::vector<Token> tokens;
+        Token token = {TokenType::BLOCK, "BLOCK", lineNumber};
+        tokens.push_back(token);
+
+        const auto& lines = splitByNewline(code);
+        for(const auto& line : lines){
+            auto stmtTokens = tokenize_statement(line, lineNumber);
+            tokens.insert(tokens.end(), stmtTokens.begin(), stmtTokens.end());
+        }
+        return tokens;
+    }
+    std::vector<Token> tokenize_statement(const std::string& code, int& lineNumber){
+        std::vector<Token> tokens;
         int len = code.size();
         for(int i = 0; i < len; i++){
             char c = code[i];
             if(c == ' '){
                 int count = 1;
-                while(i < len && code[i+1] == ' '){
+                while(i+1 < len && code[i+1] == ' '){
                     count++;
                     i++;
                 }
                 if(count == 4){
+                    lineNumber++;
                     Token token = {TokenType::INDENT, "INDENT", lineNumber};
                     tokens.push_back(token);
                 }
@@ -81,11 +106,9 @@ namespace lexer{
                 Token token = {TokenType::GREATERTHAN, str, lineNumber};
                 tokens.push_back(token);
             }
-            
         }
         return tokens;
     }
-
     Token tokenizeAlpha(char c, int& i, const std::string& code){
         std::string str;
         str.push_back(c);

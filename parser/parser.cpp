@@ -6,7 +6,7 @@
 
 namespace parser {
     
-    std::unique_ptr<Node> parse(const std::vector<lexer::Token>& tokens){
+    std::unique_ptr<Node> parseStatement(const std::vector<lexer::Token>& tokens){
         int len = tokens.size();
         int pos = 0;
 
@@ -17,9 +17,10 @@ namespace parser {
                 
                 printStmt->type = NodeType::PRINT;
                 printStmt->token = token;
+                printStmt->value = "PRINT";
                 
                 auto statement = parsePrint(tokens, pos);
-                printStmt->addChild(statement);
+                printStmt->addChild(std::move(statement));
                 return printStmt;
             }
             else if(token.type == lexer::TokenType::IDENTIFIER){
@@ -27,7 +28,7 @@ namespace parser {
                 identifier->token = token;
                 identifier->type = NodeType::ASSIGN;
                 auto statement = parseIdentifier(tokens, pos);
-                identifier->addChild(statement);
+                identifier->addChild(std::move(statement));
                 return identifier;
             } else if(token.type == lexer::TokenType::IF){
                 auto ifStmt = parseIf(tokens, pos);
@@ -35,27 +36,48 @@ namespace parser {
             }
         }
     }
-    std::unique_ptr<Node> parseIf(const std::vector<lexer::Token>& tokens, int& pos){
-        auto token = tokens[pos++];
-        auto nodeIf = std::make_unique<Node>();
-        nodeIf->token = token;
-        nodeIf->type = NodeType::IF;
-        nodeIf->value = token.value; 
 
-        auto node = parseExpression(tokens, pos);
-        if(node->type == NodeType::OPERATOR && node->value == "=="){
-            lexer::Token token = tokens[pos++];
-            auto op = std::make_unique<Node>();
-            op->token = token;
-            op->type = NodeType::OPERATOR;
-            op->value = token.value;
-            auto right = parseExpression(tokens, pos);
-            op->addChild(node);
-            op->addChild(right);
-            node = std::move(op);
+    std::unique_ptr<Node> parseIf(const std::vector<lexer::Token>& tokens, int& pos){
+        pos--;
+        auto ifStmt = std::make_unique<Node>();
+        ifStmt->token = tokens[pos++];
+        ifStmt->type = NodeType::IF;
+        ifStmt->value = ifStmt->token.value;
+        auto condition = parseConditional(tokens, pos);
+        ifStmt->addChild(std::move(condition));
+        auto block = std::make_unique<Node>();
+        block->token = tokens[pos++];
+        block->type = NodeType::BLOCK;
+        block->value = "BLOCK";
+        std::vector<lexer::Token> tokenLine;
+        pos--;
+        while(pos < tokens.size() && tokens[pos].type == lexer::TokenType::INDENT){
+            pos++;
+            while(pos < tokens.size() && tokens[pos].type != lexer::TokenType::INDENT){
+                tokenLine.push_back(tokens[pos++]);
+            }
+            auto child = parseStatement(tokenLine);
+            tokenLine.clear();
+            block->addChild(std::move(child));
         }
-        nodeIf->addChild(node);
-        return nodeIf;
+        ifStmt->addChild(std::move(block));
+        return ifStmt;
+    }
+    std::unique_ptr<Node> parseConditional(const std::vector<lexer::Token>& tokens, int& pos){
+        auto node = parseExpression(tokens, pos);
+        if( pos < tokens.size() && (tokens[pos].type == lexer::TokenType::EQUALS ||
+            tokens[pos].type == lexer::TokenType::GREATERTHAN ||
+            tokens[pos].type == lexer::TokenType::LESSTHAN )){
+                auto conditional = std::make_unique<Node>();
+                conditional->token = tokens[pos++];
+                conditional->type = NodeType::CONDITIONAL;
+                conditional->value = conditional->token.value;
+                auto right = parseExpression(tokens, pos);
+                conditional->addChild(std::move(node));
+                conditional->addChild(std::move(right));
+                node = std::move(conditional);
+            }
+        return node;
     }
     std::unique_ptr<Node> parseIdentifier(const std::vector<lexer::Token>& tokens, int& pos){
         lexer::Token token = tokens[pos++];
@@ -76,8 +98,8 @@ namespace parser {
             op->value = token.value;
             auto right = parseTerm(tokens, pos);
 
-            op->addChild(node);
-            op->addChild(right);
+            op->addChild(std::move(node));
+            op->addChild(std::move(right));
             node = std::move(op);
         }
         return node;
@@ -93,8 +115,8 @@ namespace parser {
             op->value = token.value;
             auto right = parseFactor(tokens, pos);
 
-            op->addChild(node);
-            op->addChild(right);
+            op->addChild(std::move(node));
+            op->addChild(std::move(right));
             node = std::move(op);
         }
         return node;
