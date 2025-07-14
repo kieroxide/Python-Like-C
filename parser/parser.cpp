@@ -15,7 +15,7 @@ namespace parser {
             if(token.type == lexer::TokenType::PRINT){
                 auto printStmt = std::make_unique<Node>();
                 
-                printStmt->type = NodeType::PRINT_STATEMENT;
+                printStmt->type = NodeType::PRINT;
                 printStmt->token = token;
                 
                 auto statement = parsePrint(tokens, pos);
@@ -25,12 +25,37 @@ namespace parser {
             else if(token.type == lexer::TokenType::IDENTIFIER){
                 auto identifier = std::make_unique<Node>();
                 identifier->token = token;
-                identifier->type = NodeType::ASSIGN_STATEMENT;
+                identifier->type = NodeType::ASSIGN;
                 auto statement = parseIdentifier(tokens, pos);
                 identifier->addChild(statement);
                 return identifier;
+            } else if(token.type == lexer::TokenType::IF){
+                auto ifStmt = parseIf(tokens, pos);
+                return ifStmt;
             }
         }
+    }
+    std::unique_ptr<Node> parseIf(const std::vector<lexer::Token>& tokens, int& pos){
+        auto token = tokens[pos++];
+        auto nodeIf = std::make_unique<Node>();
+        nodeIf->token = token;
+        nodeIf->type = NodeType::IF;
+        nodeIf->value = token.value; 
+
+        auto node = parseExpression(tokens, pos);
+        if(node->type == NodeType::OPERATOR && node->value == "=="){
+            lexer::Token token = tokens[pos++];
+            auto op = std::make_unique<Node>();
+            op->token = token;
+            op->type = NodeType::OPERATOR;
+            op->value = token.value;
+            auto right = parseExpression(tokens, pos);
+            op->addChild(node);
+            op->addChild(right);
+            node = std::move(op);
+        }
+        nodeIf->addChild(node);
+        return nodeIf;
     }
     std::unique_ptr<Node> parseIdentifier(const std::vector<lexer::Token>& tokens, int& pos){
         lexer::Token token = tokens[pos++];

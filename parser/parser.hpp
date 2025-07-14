@@ -7,8 +7,9 @@
 namespace parser{
     enum class NodeType{
             PROGRAM,
-            ASSIGN_STATEMENT,
-            PRINT_STATEMENT,
+            ASSIGN,
+            PRINT,
+            IF,
             OPERATOR,
             VARIABLE,
             NUMBER
@@ -31,6 +32,7 @@ namespace parser{
 
     std::unique_ptr<Node> parsePrint(const std::vector<lexer::Token>& tokens, int& pos);
     std::unique_ptr<Node> parseIdentifier(const std::vector<lexer::Token>& tokens, int& pos);
+    std::unique_ptr<Node> parseIf(const std::vector<lexer::Token>& tokens, int& pos);
 
     std::unique_ptr<Node> parseExpression(const std::vector<lexer::Token>& tokens, int& pos);
     std::unique_ptr<Node> parseTerm(const std::vector<lexer::Token>& tokens, int& pos);

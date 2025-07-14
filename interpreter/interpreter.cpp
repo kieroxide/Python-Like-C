@@ -23,12 +23,12 @@ int Interpreter::evaluate(const std::unique_ptr<parser::Node>& node) {
             if(node->value == "/"){return left / right;}
             else{ return 0;} 
         }
-        case parser::NodeType::PRINT_STATEMENT: {
+        case parser::NodeType::PRINT: {
             std::string result = std::to_string(evaluate(node->children[0]));
             std::cout << result << std::endl;
             return 0;
         }
-        case parser::NodeType::ASSIGN_STATEMENT: {
+        case parser::NodeType::ASSIGN: {
             std::string varName = node->token.value;
             int value = evaluate(node->children[0]);
             variables[varName] = value;

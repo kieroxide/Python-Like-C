@@ -1,4 +1,3 @@
 x = 5
-y = 6
-z = y + x
-print z
+if x == 6:
+    x = x + 5

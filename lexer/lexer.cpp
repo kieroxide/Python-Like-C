@@ -7,7 +7,7 @@
 namespace lexer{
     void printTokens(std::vector<Token> tokens){
         for(Token t : tokens){
-            std::cout << "\nLine Number: " << t.lineNumber << ", " 
+            std::cout << "Line Number: " << t.lineNumber << ", " 
             << "Type: "<< static_cast<int>(t.type) << ", " 
             << "Value: " << t.value << "\n";
         }
@@ -16,13 +16,20 @@ namespace lexer{
     std::vector<Token> tokenize(const std::string& code, int& lineNumber){
         std::vector<Token> tokens;
         int len = code.size();
-
         for(int i = 0; i < len; i++){
-            if(i >= len){
-                break;
-            }
             char c = code[i];
-            if(isalpha(c)){
+            if(c == ' '){
+                int count = 1;
+                while(i < len && code[i+1] == ' '){
+                    count++;
+                    i++;
+                }
+                if(count == 4){
+                    Token token = {TokenType::INDENT, "INDENT", lineNumber};
+                    tokens.push_back(token);
+                }
+            }
+            else if(isalpha(c)){
                 Token token = tokenizeAlpha(c, i, code);
                 token.lineNumber = lineNumber;
                 tokens.push_back(token);
@@ -34,7 +41,14 @@ namespace lexer{
             }
             else if(c == '='){
                 std::string str = "=";
-                Token token = {TokenType::ASSIGN, str, lineNumber};
+                Token token;
+                if(code[i+1] == '='){
+                    str += "=";
+                    token = {TokenType::EQUALS, str, lineNumber};
+                    i++;
+                } else {
+                    token = {TokenType::ASSIGN, str, lineNumber};
+                }
                 tokens.push_back(token);
             }
             else if(c == '+'){
@@ -57,6 +71,16 @@ namespace lexer{
                 Token token = {TokenType::DIVIDE, str, lineNumber};
                 tokens.push_back(token);
             }
+            else if(c == '<'){
+                std::string str = "<";
+                Token token = {TokenType::LESSTHAN, str, lineNumber};
+                tokens.push_back(token);
+            }
+            else if(c == '>'){
+                std::string str = ">";
+                Token token = {TokenType::GREATERTHAN, str, lineNumber};
+                tokens.push_back(token);
+            }
             
         }
         return tokens;
@@ -71,7 +95,10 @@ namespace lexer{
             str.push_back(c);   
         }
         Token token;
-        if(str == "print"){
+        if(str == "if"){
+            token.type = TokenType::IF;
+        }
+        else if(str == "print"){
             token.type = TokenType::PRINT;
         } else {
             token.type = TokenType::IDENTIFIER;

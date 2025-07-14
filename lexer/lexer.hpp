@@ -5,8 +5,11 @@
 
 namespace lexer {
     enum class TokenType{
+        //Style
+        INDENT,
         //Reserved Words
         PRINT,
+        IF,
         //USER DEFINED/LITERALS
         IDENTIFIER,
         NUMBER,
@@ -16,6 +19,9 @@ namespace lexer {
         SUBTRACT,
         MULTIPLY,
         DIVIDE,
+        EQUALS,
+        LESSTHAN,
+        GREATERTHAN
     };
 
     struct Token{
