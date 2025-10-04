@@ -1,0 +1,6 @@
+# runtime and parse error checks
+print z          # undefined variable
+if 1 == :        # malformed conditional
+    print 1
+x = 1 / 0        # division by zero (runtime)
+print x
