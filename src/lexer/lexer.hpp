@@ -9,6 +9,7 @@ namespace lexer {
         INDENT,
         NEWLINE,
         BLOCK,
+        COLON,
         //Reserved Words
         PRINT,
         IF,
