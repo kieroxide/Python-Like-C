@@ -50,4 +50,20 @@ std::string getBlock(std::vector<std::string>& lines, int& i, int& lineNumber) {
     }
     return block;
 }
+
+std::string convertTabs(const std::string& str) {
+    const int indentSize = 4;
+    std::string formatted = "";
+    for (const char c : str) {
+        if (c == '\t') {
+            for (int i = 0; i < indentSize; i++) {
+                formatted += " ";
+            }
+        } else {
+            formatted += c;
+        }
+    }
+    
+    return formatted;
+}
 }  // namespace utility
