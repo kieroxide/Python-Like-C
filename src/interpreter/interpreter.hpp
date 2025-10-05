@@ -1,10 +1,11 @@
 #pragma once
-#include "../parser/parser.hpp"
 #include <unordered_map>
+
+#include "../parser/parser.hpp"
 
 class Interpreter {
     std::unordered_map<std::string, int> variables;
 
-public:
+   public:
     int evaluate(const std::unique_ptr<parser::Node>& node);
 };
