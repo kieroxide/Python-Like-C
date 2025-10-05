@@ -3,7 +3,6 @@
 #include <string>
 #include <vector>
 
-namespace lexer {
 enum class TokenType {
     // Style
     INDENT,
@@ -33,12 +32,17 @@ struct Token {
     int lineNumber;
 };
 
-std::vector<Token> tokenize(const std::string& code, int& lineNumber);
-std::vector<Token> tokenize_statement(const std::string& code, int& lineNumber);
+class Lexer {
+   private:
+    int lineNumber = 1;
+    int characterPosition = 0;
 
-Token tokenizeAlpha(char c, int& i, const std::string& code);
-Token tokenizeDigit(char c, int& i, const std::string& code);
+   public:
+    static void printTokens(std::vector<Token> tokens);
+    std::vector<Token> tokenize(const std::string& code);
 
-void printTokens(std::vector<Token> tokens);
-
-}  // namespace lexer
+   private:
+    std::vector<Token> tokenize_statement(const std::string& code);
+    Token tokenizeAlpha(const std::string& code);
+    Token tokenizeDigits(const std::string& code);
+};

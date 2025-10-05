@@ -5,81 +5,77 @@
 #include <sstream>
 #include <string>
 
-namespace lexer {
+#include "src/utility/utility.hpp"
 
-std::vector<std::string> splitByNewline(const std::string& input) {
-    std::vector<std::string> lines;
-    std::stringstream ss(input);
-    std::string line;
+using namespace std;
 
-    while (std::getline(ss, line)) {
-        lines.push_back(line);
-    }
-
-    return lines;
-}
-
-void printTokens(std::vector<Token> tokens) {
+void Lexer::printTokens(vector<Token> tokens) {
     for (Token t : tokens) {
-        std::cout << "Line Number: " << t.lineNumber << ", "
-                  << "Type: " << static_cast<int>(t.type) << ", "
-                  << "Value: " << t.value << "\n";
+        cout << "Line Number: " << t.lineNumber << ", "
+             << "Type: " << static_cast<int>(t.type) << ", "
+             << "Value: " << t.value << "\n";
     }
 }
 
-std::vector<Token> tokenize(const std::string& code, int& lineNumber) {
-    std::vector<Token> tokens;
+vector<Token> Lexer::tokenize(const string& code) {
+    vector<Token> tokens;
+
+    // Generic Block type to denote Start of program
     Token token = {TokenType::BLOCK, "BLOCK", lineNumber};
     tokens.push_back(token);
 
-    const auto& lines = splitByNewline(code);
-    for (const auto& line : lines) {
-        auto stmtTokens = tokenize_statement(line, lineNumber);
+    const int len = static_cast<int>(code.size());
+    while (characterPosition < len) {
+        auto stmtTokens = tokenize_statement(code);
         tokens.insert(tokens.end(), stmtTokens.begin(), stmtTokens.end());
     }
+
     return tokens;
 }
 
-std::vector<Token> tokenize_statement(const std::string& code, int& lineNumber) {
-    std::vector<Token> tokens;
+/* Tokenizes a Single Statement returning a list of tokens at code end or new line*/
+vector<Token> Lexer::tokenize_statement(const string& code) {
+    vector<Token> tokens;
     int len = static_cast<int>(code.size());
-    int i = 0;
 
-    // Count leading spaces and emit one INDENT token per 4-space group
-    int count = 0;
-    while (i < len && code[i] == ' ') {
-        ++count;
-        ++i;
-    }
-    int groups = count / 4;
-    for (int g = 0; g < groups; ++g) {
-        tokens.push_back({TokenType::INDENT, "INDENT", lineNumber});
+    // Count leading spaces and emit one INDENT token per 4-space group (only at start of newline)
+    const bool isAtStartOfNewLine = characterPosition == 0 || code[characterPosition - 1] == '\n';
+    if (isAtStartOfNewLine) {
+        int count = 0;
+        while (characterPosition < len && code[characterPosition++] == ' ') {
+            ++count;
+        }
+
+        int groups = count / 4;
+        for (int g = 0; g < groups; ++g) {
+            tokens.push_back({TokenType::INDENT, "INDENT", lineNumber});
+        }
     }
 
     // Tokenize rest of the line
-    for (; i < len; ++i) {
-        char c = code[i];
+    while (characterPosition < len) {
+        char c = code[++characterPosition];
         if (c == ' ')
             continue;
 
         if (isalpha(static_cast<unsigned char>(c))) {
-            Token token = tokenizeAlpha(c, i, code);
+            Token token = tokenizeAlpha(code);
             token.lineNumber = lineNumber;
             tokens.push_back(token);
             continue;
         }
 
         if (isdigit(static_cast<unsigned char>(c))) {
-            Token token = tokenizeDigit(c, i, code);
+            Token token = tokenizeDigits(code);
             token.lineNumber = lineNumber;
             tokens.push_back(token);
             continue;
         }
 
         // two-char operator '=='
-        if (c == '=' && i + 1 < len && code[i + 1] == '=') {
+        if (c == '=' && characterPosition + 1 < len && code[characterPosition + 1] == '=') {
             tokens.push_back({TokenType::EQUALS, "==", lineNumber});
-            ++i;  // consumed second '='
+            ++characterPosition;  // consumed second '='
             continue;
         }
 
@@ -108,22 +104,30 @@ std::vector<Token> tokenize_statement(const std::string& code, int& lineNumber) 
             case ':':
                 tokens.push_back({TokenType::COLON, ":", lineNumber});
                 break;
+            case '\n':
+                lineNumber++;
+                characterPosition++;
+                tokens.push_back({TokenType::NEWLINE, "NEWLINE", lineNumber});
+                return tokens;
             default:
-                std::cerr << "ERROR LEXING line " << lineNumber << " char '" << c << "'\n";
+                cerr << "ERROR LEXING line " << lineNumber << " char '" << c << "'\n";
                 break;
         }
     }
     return tokens;
 }
 
-Token tokenizeAlpha(char c, int& i, const std::string& code) {
-    std::string str;
+/* Creates new token of a word ensuring to take the entire word if has multiple chars*/
+Token Lexer::tokenizeAlpha(const string& code) {
+    char c = code[characterPosition];
+    string str;
     str.push_back(c);
-    while (i + 1 < code.size() && isalpha(code[i + 1])) {
-        i++;
-        c = code[i];
+
+    while (characterPosition + 1 < code.size() && isalpha(code[characterPosition + 1])) {
+        c = code[++characterPosition];
         str.push_back(c);
     }
+
     Token token;
     if (str == "if") {
         token.type = TokenType::IF;
@@ -132,21 +136,26 @@ Token tokenizeAlpha(char c, int& i, const std::string& code) {
     } else {
         token.type = TokenType::IDENTIFIER;
     }
+
     token.value = str;
     return token;
 }
 
-Token tokenizeDigit(char c, int& i, const std::string& code) {
-    std::string str;
+/* Creates new token of a digit ensuring to take the entire number if has multiple digits*/
+Token Lexer::tokenizeDigits(const string& code) {
+    string str;
+
+    char c = code[characterPosition];
     str.push_back(c);
-    while (i + 1 < code.size() && isdigit(code[i + 1])) {
-        i++;
-        c = code[i];
+
+    while (characterPosition + 1 < code.size() && isdigit(code[characterPosition + 1])) {
+        c = code[++characterPosition];
         str.push_back(c);
     }
+
     Token token;
     token.type = TokenType::NUMBER;
     token.value = str;
+
     return token;
 }
-}  // namespace lexer
