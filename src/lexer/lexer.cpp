@@ -63,6 +63,12 @@ vector<Token> Lexer::tokenize_statement(const string& code) {
             ++characterPosition;  // main loop consumes spaces
             continue;
         }
+        if (c == '/' && characterPosition + 1 < len && code[characterPosition + 1] == '/') {
+            while (characterPosition < len && code[characterPosition] != '\n') {
+                ++characterPosition;
+            }
+            continue;
+        }
         if (c == '\r') {
             ++characterPosition;
             continue;
