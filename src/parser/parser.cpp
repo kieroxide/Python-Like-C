@@ -12,8 +12,8 @@ unique_ptr<Node> Parser::parseProgram(const vector<Token>& tokens) {
     tokenLength = tokens.size();
 
     const Token start = tokens[tokenPosition++];
-    if (tokenPosition >= tokenLength && start.type != TokenType::BLOCK) {
-        cerr << "Invalid Start to Program -- No Block Token";
+    if (tokenPosition >= tokenLength || start.type != TokenType::BLOCK) {
+        cerr << "Invalid Start to Program -- No Block Token" << "\n";
     }
 
     unique_ptr<Node> program = make_unique<Node>();
