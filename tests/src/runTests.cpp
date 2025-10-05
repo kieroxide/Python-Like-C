@@ -1,23 +1,22 @@
-#include <vector>
-#include <string>
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
+#include <string>
+#include <vector>
 
-int run(std::string filename);
+#include "src/executor/executor.hpp"
+
+using namespace std;
 
 int main() {
-    std::vector<std::string> tests = {
-        "tests/test_simple_assign.txt",
-        "tests/test_arith.txt",
-        "tests/test_conditionals.txt",
-        "tests/test_nested.txt"
-    };
+    string testsDir = "tests/";
+    vector<string> tests = {"test_simple_assign.txt", "test_arith.txt", "test_conditionals.txt", "test_nested.txt"};
 
     for (auto const& t : tests) {
-    std::cout << "=== Running " << t << " ===\n";
-    int rc = run(t);
-    if (rc != 0) std::cerr << "Test exited with code " << rc << "\n";
-        std::cout << '\n';
+        cout << "=== Running " << t << " ===\n";
+        int response = Executor::executeFile(testsDir + t);
+        if (response != 0)
+            cerr << "Test exited with code " << response << "\n";
+        cout << '\n' << flush;
     }
     return 0;
 }
