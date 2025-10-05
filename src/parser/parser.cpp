@@ -80,7 +80,6 @@ unique_ptr<Node> Parser::parseIf(const vector<Token>& tokens) {
     while (tokenPosition < (int)tokens.size() && tokens[tokenPosition].type == TokenType::NEWLINE) ++tokenPosition;
 
     auto block = make_unique<Node>();
-    block->token = tokens[tokenPosition];
     block->type = NodeType::BLOCK;
     block->value = "BLOCK";
 
@@ -124,7 +123,6 @@ unique_ptr<Node> Parser::parseIdentifier(const vector<Token>& tokens) {
 }
 unique_ptr<Node> Parser::parsePrint(const vector<Token>& tokens) {
     unique_ptr<Node> node = parseExpression(tokens);
-    ++tokenPosition; // consumes colon
     return node;
 }
 
