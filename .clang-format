@@ -1,0 +1,26 @@
+BasedOnStyle: Google
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 120
+AllowShortIfStatementsOnASingleLine: false
+
+# Keep braces attached to control statements (K&R style)
+BreakBeforeBraces: Attach
+
+# Space before parens only for control statements (if/for/while)
+SpaceBeforeParens: ControlStatements
+
+# Don't collapse short functions onto a single line
+AllowShortFunctionsOnASingleLine: None
+
+# Avoid aggressive consecutive alignment — keeps diffs small
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignTrailingComments: false
+
+# Pointer alignment (int* p)
+PointerAlignment: Left
+
+# Keep comments wrapped nicely
+ReflowComments: true
