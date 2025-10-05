@@ -72,8 +72,10 @@ unique_ptr<Node> Parser::parseIf(const vector<Token>& tokens) {
     auto condition = parseConditional(tokens);
     ifStmt->addChild(move(condition));
 
-    if(tokens[tokenPosition++].type != TokenType::COLON){
-        cerr << "Expecting Colon";
+    if (tokenPosition < tokenLength && tokens[tokenPosition].type == TokenType::COLON) {
+        ++tokenPosition;  // Consume Colon
+    } else {
+        cerr << "Expecting Colon" << "\n";
     }
     while (tokenPosition < (int)tokens.size() && tokens[tokenPosition].type == TokenType::NEWLINE) ++tokenPosition;
 
@@ -87,7 +89,8 @@ unique_ptr<Node> Parser::parseIf(const vector<Token>& tokens) {
         ++tokenPosition;  // consume indent
 
         auto child = parseStatement(tokens);
-        if (child) block->addChild(move(child));
+        if (child)
+            block->addChild(move(child));
 
         // Consumes trailing new lines
         while (tokenPosition < (int)tokens.size() && tokens[tokenPosition].type == TokenType::NEWLINE) {
@@ -180,6 +183,7 @@ unique_ptr<Node> Parser::parseFactor(const vector<Token>& tokens) {
         variable->value = token.value;
         return variable;
     }
+    return nullptr;
 }
 
 void Parser::printAST(const unique_ptr<Node>& node, int indent) {
