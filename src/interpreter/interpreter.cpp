@@ -5,11 +5,13 @@
 #include <string>
 #include <unordered_map>
 
-int Interpreter::evaluate(const std::unique_ptr<parser::Node>& node) {
-    // std::cout << "\nCurrentNODE VALUE: " << node->value << "\n";
+using namespace std;
+
+int Interpreter::evaluate(const unique_ptr<Node>& node) {
+    // cout << "\nCurrentNODE VALUE: " << node->value << "\n";
     switch (node->type) {
-        case parser::NodeType::BLOCK:
-        case parser::NodeType::PROGRAM: {
+        case NodeType::BLOCK:
+        case NodeType::PROGRAM: {
             for (int i = 0; i < node->children.size(); i++) {
                 // printf("\nChild: %d \n", i+1);
                 // printf("Children SIZE: %d \n \n", node->children.size());
@@ -17,14 +19,14 @@ int Interpreter::evaluate(const std::unique_ptr<parser::Node>& node) {
             }
             return 0;
         }
-        case parser::NodeType::IF: {
+        case NodeType::IF: {
             int condition = evaluate(node->children[0]);
             if (condition != 0) {
                 evaluate(node->children[1]);
             }
             return 0;
         }
-        case parser::NodeType::CONDITIONAL: {
+        case NodeType::CONDITIONAL: {
             int left = evaluate(node->children[0]);
             int right = evaluate(node->children[1]);
             if (node->value == "==") {
@@ -38,17 +40,17 @@ int Interpreter::evaluate(const std::unique_ptr<parser::Node>& node) {
             }
             return 0;
         }
-        case parser::NodeType::NUMBER:
-            return std::stoi(node->value);
-        case parser::NodeType::VARIABLE: {
+        case NodeType::NUMBER:
+            return stoi(node->value);
+        case NodeType::VARIABLE: {
             auto var = variables.find(node->value);
             if (var != variables.end()) {
                 return var->second;
             }
-            std::cout << "VARIABLE NOT FOUND";
+            cout << "VARIABLE NOT FOUND";
             return 0;
         }
-        case parser::NodeType::OPERATOR: {
+        case NodeType::OPERATOR: {
             int left = evaluate(node->children[0]);
             int right = evaluate(node->children[1]);
             if (node->value == "+") {
@@ -66,19 +68,19 @@ int Interpreter::evaluate(const std::unique_ptr<parser::Node>& node) {
                 return 0;
             }
         }
-        case parser::NodeType::PRINT: {
-            std::string result = std::to_string(evaluate(node->children[0]));
-            std::cout << result << std::endl;
+        case NodeType::PRINT: {
+            string result = to_string(evaluate(node->children[0]));
+            cout << result << endl;
             return 0;
         }
-        case parser::NodeType::ASSIGN: {
-            std::string varName = node->token.value;
+        case NodeType::ASSIGN: {
+            string varName = node->token.value;
             int value = evaluate(node->children[0]);
             variables[varName] = value;
             return value;
         }
         default:
-            std::cout << "ERROR INVALID TOKEN TYPE";
+            cout << "ERROR INVALID TOKEN TYPE";
             return 0;
     }
     return 0;

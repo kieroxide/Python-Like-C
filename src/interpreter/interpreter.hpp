@@ -7,5 +7,5 @@ class Interpreter {
     std::unordered_map<std::string, int> variables;
 
    public:
-    int evaluate(const std::unique_ptr<parser::Node>& node);
+    int evaluate(const std::unique_ptr<Node>& node);
 };
