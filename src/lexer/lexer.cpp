@@ -18,6 +18,9 @@ void Lexer::printTokens(vector<Token> tokens) {
 }
 
 vector<Token> Lexer::tokenize(const string& code) {
+    characterPosition = 0;
+    lineNumber = 1;
+
     vector<Token> tokens;
 
     // Generic Block type to denote Start of program
@@ -42,8 +45,9 @@ vector<Token> Lexer::tokenize_statement(const string& code) {
     const bool isAtStartOfNewLine = characterPosition == 0 || code[characterPosition - 1] == '\n';
     if (isAtStartOfNewLine) {
         int count = 0;
-        while (characterPosition < len && code[characterPosition++] == ' ') {
+        while (characterPosition < len && code[characterPosition] == ' ') {
             ++count;
+            ++characterPosition;
         }
 
         int groups = count / 4;
@@ -54,14 +58,21 @@ vector<Token> Lexer::tokenize_statement(const string& code) {
 
     // Tokenize rest of the line
     while (characterPosition < len) {
-        char c = code[++characterPosition];
-        if (c == ' ')
+        char c = code[characterPosition];
+        if (c == ' ') {
+            ++characterPosition;  // main loop consumes spaces
             continue;
+        }
+        if (c == '\r') {
+            ++characterPosition;
+            continue;
+        }  // handle CR in CRLF
 
         if (isalpha(static_cast<unsigned char>(c))) {
             Token token = tokenizeAlpha(code);
             token.lineNumber = lineNumber;
             tokens.push_back(token);
+            ++characterPosition;  // advance past the last char consumed by helper
             continue;
         }
 
@@ -69,48 +80,58 @@ vector<Token> Lexer::tokenize_statement(const string& code) {
             Token token = tokenizeDigits(code);
             token.lineNumber = lineNumber;
             tokens.push_back(token);
+            ++characterPosition;  // advance past last digit consumed by helper
             continue;
         }
 
         // two-char operator '=='
         if (c == '=' && characterPosition + 1 < len && code[characterPosition + 1] == '=') {
             tokens.push_back({TokenType::EQUALS, "==", lineNumber});
-            ++characterPosition;  // consumed second '='
+            characterPosition += 2;  // consume both '=' chars
             continue;
         }
 
         switch (c) {
             case '=':
                 tokens.push_back({TokenType::ASSIGN, "=", lineNumber});
+                ++characterPosition;
                 break;
             case '+':
                 tokens.push_back({TokenType::PLUS, "+", lineNumber});
+                ++characterPosition;
                 break;
             case '-':
                 tokens.push_back({TokenType::SUBTRACT, "-", lineNumber});
+                ++characterPosition;
                 break;
             case '*':
                 tokens.push_back({TokenType::MULTIPLY, "*", lineNumber});
+                ++characterPosition;
                 break;
             case '/':
                 tokens.push_back({TokenType::DIVIDE, "/", lineNumber});
+                ++characterPosition;
                 break;
             case '<':
                 tokens.push_back({TokenType::LESSTHAN, "<", lineNumber});
+                ++characterPosition;
                 break;
             case '>':
                 tokens.push_back({TokenType::GREATERTHAN, ">", lineNumber});
+                ++characterPosition;
                 break;
             case ':':
                 tokens.push_back({TokenType::COLON, ":", lineNumber});
+                ++characterPosition;
                 break;
             case '\n':
-                lineNumber++;
-                characterPosition++;
                 tokens.push_back({TokenType::NEWLINE, "NEWLINE", lineNumber});
+                ++lineNumber;
+                ++characterPosition;
                 return tokens;
             default:
                 cerr << "ERROR LEXING line " << lineNumber << " char '" << c << "'\n";
+                ++characterPosition;  // avoid infinite loop on unknown char
                 break;
         }
     }
