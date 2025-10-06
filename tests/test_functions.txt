@@ -1,0 +1,16 @@
+def add(a, b){   
+    return a + b
+}
+
+def sub(a, b){
+    return a - b
+}
+
+money = 200
+income = 10
+expenses = 2
+
+money = add(money, income)
+money = sub(money, expenses)
+
+print money
