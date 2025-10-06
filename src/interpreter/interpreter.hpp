@@ -5,8 +5,11 @@
 #include "../Scope/Scope.hpp"
 
 class Interpreter {
+   public:
     Scope globalScope;
     Scope* currentScope;
+
+    std::unordered_map<std::string, std::unique_ptr<Node>> functionTable;
 
    private:
     void pushScope();
