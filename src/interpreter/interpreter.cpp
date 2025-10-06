@@ -35,22 +35,43 @@ int Interpreter::evaluate(const unique_ptr<Node>& node) {
         return 0;
     }
     switch (node->type) {
-        case NodeType::BLOCK:
-            pushScope();
-
-            // Evaluate all statements in the block
-            for (const auto& child : node->children) {
-                evaluate(child);
-            }
-
-            popScope();
-            return 0;
-
         case NodeType::PROGRAM: {
             for (int i = 0; i < node->children.size(); i++) {
                 evaluate(node->children[i]);
             }
             return 0;
+        }
+
+        case NodeType::FUNC_CALL:
+            evaluateFunctionCall(node);
+
+        case NodeType::DEF: {
+            string funcName = node->value;
+            functionTable[funcName] = unique_ptr<Node>(node->clone());
+            return 0;
+        }
+
+        case NodeType::RETURN:
+            if (!node->children.empty()) {
+                return evaluate(node->children[0]);
+            }
+            return 0;
+
+        case NodeType::BLOCK: {
+            pushScope();
+            int result = 0;
+
+            // Evaluate all statements in the block
+            for (const auto& child : node->children) {
+                int result = evaluate(child);
+                if (child->type == NodeType::RETURN) {
+                    popScope();
+                    return result;
+                }
+            }
+
+            popScope();
+            return result;
         }
 
         case NodeType::IF: {
@@ -143,5 +164,48 @@ int Interpreter::evaluate(const unique_ptr<Node>& node) {
                  << node->token.lineNumber << endl;
             return 0;
     }
+    return 0;
+}
+
+int Interpreter::evaluateFunctionCall(const unique_ptr<Node>& funcNode) {
+    auto functionInterpreter = std::make_unique<Interpreter>();
+
+    // Check if function exists before accessing it
+    if (functionTable.find(funcNode->value) == functionTable.end()) {
+        cerr << "ERROR: Function '" << funcNode->value << "' not defined at line " << funcNode->token.lineNumber
+             << endl;
+        return 0;
+    }
+    auto functionDef = functionTable[funcNode->value]->clone();
+
+    // Get parameter names
+    vector<string> paramNames;
+    for (int i = 0; i < functionDef->children.size() - 1; i++) {
+        paramNames.push_back(functionDef->children[i]->value);
+    }
+
+    // Evaluate arguments from the call
+    vector<int> argValues;
+    for (const auto& argNode : funcNode->children) {
+        argValues.push_back(this->evaluate(argNode));
+    }
+
+    // Check parameter count
+    if (argValues.size() != paramNames.size()) {
+        cerr << "ERROR: Function '" << funcNode->value << "' called with wrong number of arguments at line "
+             << funcNode->token.lineNumber << endl;
+        return 0;
+    }
+
+    // Bind arguments to parameters and add to function interpreters global scope
+    for (int i = 0; i < paramNames.size(); i++) {
+        functionInterpreter->globalScope.update(paramNames[i], argValues[i]);
+    }
+
+    // Execute function body
+    if (functionDef->children.size() > paramNames.size()) {
+        return functionInterpreter->evaluate(functionDef->children.back());
+    }
+
     return 0;
 }
