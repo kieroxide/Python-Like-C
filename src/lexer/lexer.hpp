@@ -22,6 +22,7 @@ enum class TokenType {
     IDENTIFIER,
     NUMBER,
     // OPERATORS
+    RETURN,
     ASSIGN,
     PLUS,
     SUBTRACT,

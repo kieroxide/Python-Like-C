@@ -8,6 +8,7 @@
 enum class NodeType {
     PROGRAM,
     DEF,
+    RETURN,
     PARAM,
     FUNC_CALL,
     ASSIGN,

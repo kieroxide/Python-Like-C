@@ -204,7 +204,9 @@ Token Lexer::tokenizeAlpha(const string& code) {
         token.type = TokenType::PRINT;
     } else if (str == "def") {
         token.type = TokenType::DEF;
-    } else {
+    } else if (str == "return") {
+        token.type = TokenType::RETURN;
+    }else {
         token.type = TokenType::IDENTIFIER;
     }
 

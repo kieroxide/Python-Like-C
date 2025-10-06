@@ -70,6 +70,16 @@ unique_ptr<Node> Parser::parseStatement(const vector<Token>& tokens) {
             return parseFunction(tokens);
         }
 
+        case TokenType::RETURN: {
+            auto returnStmt = make_unique<Node>(NodeType::RETURN, token, "RETURN");
+
+            unique_ptr<Node> expression = parseExpression(tokens);
+            if (expression) {
+                returnStmt->addChild(move(expression));
+            }
+            return returnStmt;
+        }
+
         default:
             // Unneeded Tokens
             return nullptr;
