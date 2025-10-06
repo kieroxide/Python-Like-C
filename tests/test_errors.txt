@@ -1,6 +1,74 @@
-# runtime and parse error checks
-print z          # undefined variable
-if 1 == :        # malformed conditional
+// comprehensive error test file
+
+// Lexical and Parsing Errors
+if :                  // Missing condition
     print 1
-x = 1 / 0        # division by zero (runtime)
-print x
+
+if 5 > :              // Missing right operand
+    print 2
+
+if 5 > 3 print 3      // Missing colon
+
+if 5 == 5             // Missing colon with valid condition
+    print 4
+
+print 5 +             // Incomplete expression
+
+print 5 * + 3         // Invalid consecutive operators
+
+   if x > 5:          // Indentation without a block (leading spaces)
+print 6               // Should be indented
+
+// Runtime Errors
+print undefined_var   // Undefined variable
+
+x = 10
+y = 0
+z = x / y            // Division by zero
+
+really_big = 2147483647 + 1  // Integer overflow test
+print really_big
+
+negative_div = -5 / 0  // Negative division by zero
+print negative_div
+
+// Semantic/Logic Errors
+print (5 + * 3)       // Invalid syntax in expression
+
+a = 5                 // Valid assignment
+5 = a                 // Invalid assignment (backwards)
+
+if 5 == 5:
+    if 3 > 1:
+      print 7         // Inconsistent indentation (2 spaces vs. 4)
+
+// Complex Nested Errors
+if 10 > 5:
+    if 7 < :          // Nested incomplete condition
+        print 8
+
+if 10 > 5:
+    print 9
+    print 10
+  print 11            // Dedent error (inconsistent with block)
+
+// Error recovery test
+print 12              // Should still work if parser recovers
+valid_var = 42
+print valid_var       // Should still work
+
+if valid_var == 42:
+    print "Success"   // Quotes not supported in your language
+
+print                 // Empty print statement
+
+// Multi-character operators (if not supported)
+if 10 >= 5:           // >= operator might not be supported
+    print 13
+
+if 5 <= 10:           // <= operator might not be supported
+    print 14
+
+// Missing expressions
+result =              // Missing right side of assignment
+print result
