@@ -1,0 +1,46 @@
+// Basic scope test file
+
+// Global variables
+x = 10
+y = 20
+print x  // 10
+print y  // 20
+
+// Basic block scope
+if x > 5:
+    z = 30       // z only exists inside this block
+    print x      // 10 - can access outer scope
+    print y      // 20 - can access outer scope
+    print z      // 30 - local variable
+
+// Variable shadowing
+if y > 15:
+    x = 50       // shadows the global x
+    print x      // 50 - local x
+    
+    // Nested scope
+    if x > 40:
+        y = 60   // shadows the global y
+        w = 70   // new local variable
+        print x  // 50 - from parent scope
+        print y  // 60 - local y
+        print w  // 70 - local variable
+    
+    // Back to first block scope
+    print x      // 50 - local x (still shadowed)
+    print y      // 20 - global y (not shadowed at this level)
+    // print w   // Error: w doesn't exist at this scope level
+
+// Back to global scope
+print x          // 10 - global x (not affected by shadowing)
+print y          // 20 - global y (not affected by shadowing)
+// print z       // Error: z doesn't exist at global scope
+// print w       // Error: w doesn't exist at global scope
+
+// Testing reassignment
+a = 100
+print a         // 100
+if a == 100:
+    a = 200     // modifies a in parent scope (if there's no shadowing)
+    print a     // 200
+print a         // Implementation dependent: 200 if no block scoping, 100 if block scoping
