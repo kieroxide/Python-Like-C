@@ -1,11 +1,11 @@
-#include "lexer.hpp"
+#include "Lexer.hpp"
 
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
 
-#include "src/utility/utility.hpp"
+#include "src/Utility/Utility.hpp"
 
 using namespace std;
 

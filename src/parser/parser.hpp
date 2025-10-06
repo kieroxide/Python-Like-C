@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "src/lexer/lexer.hpp"
+#include "src/Lexer/Lexer.hpp"
 
 enum class NodeType { PROGRAM, ASSIGN, PRINT, BLOCK, IF, CONDITIONAL, OPERATOR, VARIABLE, NUMBER };
 

@@ -1,9 +1,9 @@
-#include "executor.hpp"
+#include "Executor.hpp"
 
-#include "src/interpreter/interpreter.hpp"
-#include "src/lexer/lexer.hpp"
-#include "src/parser/parser.hpp"
-#include "src/utility/utility.hpp"
+#include "src/Interpreter/Interpreter.hpp"
+#include "src/Lexer/Lexer.hpp"
+#include "src/Parser/Parser.hpp"
+#include "src/Utility/Utility.hpp"
 
 using namespace std;
 
