@@ -1,5 +1,7 @@
 #include <iostream>
-#include "src\Executor\Executor.hpp"
+
+#include "src\Executor\executor.hpp"
+
 
 using namespace std;
 
@@ -9,7 +11,7 @@ int main(int argc, char* argv[]) {
         filePath = argv[1];
     }
 
-    int response = Executor::executeFile(filePath);
+    int response = executor::executeFile(filePath);
     if (response != 0) {
         cerr << "Test exited with code " << response << "\n";
     }
