@@ -55,7 +55,7 @@ vector<Token> Lexer::tokenize_statement(const string& code) {
             cerr << "WARNING: Indentation on line " << lineNumber << " is " << count
                  << " spaces, not a multiple of 4\n";
         }
-        
+
         for (size_t g = 0; g < groups; ++g) {
             tokens.push_back({TokenType::INDENT, "INDENT", lineNumber});
         }
@@ -81,10 +81,40 @@ vector<Token> Lexer::tokenize_statement(const string& code) {
         }
 
         switch (c) {
+            case '\r':
+                ++characterPosition;
+                break;
+
             case ' ':
                 ++characterPosition;  // main loop consumes spaces
                 break;
 
+            case '(':
+                tokens.push_back({TokenType::LPAREN, "(", lineNumber});
+                ++characterPosition;
+                break;
+
+            case '{':
+                tokens.push_back({TokenType::LBRACE, "{", lineNumber});
+                ++characterPosition;
+                break;
+
+            case ')':
+                tokens.push_back({TokenType::RPAREN, ")", lineNumber});
+                ++characterPosition;
+                break;
+
+            case '}':
+                tokens.push_back({TokenType::RBRACE, "}", lineNumber});
+                ++characterPosition;
+                break;
+
+            case ',':
+                tokens.push_back({TokenType::COMMA, ",", lineNumber});
+                ++characterPosition;
+                break;
+
+            // Tokenizes '/' or '//'
             case '/':
                 if (characterPosition + 1 < len && code[characterPosition + 1] == '/') {
                     while (characterPosition < len && code[characterPosition] != '\n') {
@@ -96,10 +126,7 @@ vector<Token> Lexer::tokenize_statement(const string& code) {
                 }
                 break;
 
-            case '\r':
-                ++characterPosition;
-                break;
-
+            // Tokenizes '=' or '=='
             case '=':
                 if (c == '=' && characterPosition + 1 < len && code[characterPosition + 1] == '=') {
                     // two-char operator '=='
@@ -175,6 +202,8 @@ Token Lexer::tokenizeAlpha(const string& code) {
         token.type = TokenType::IF;
     } else if (str == "print") {
         token.type = TokenType::PRINT;
+    } else if (str == "def") {
+        token.type = TokenType::DEF;
     } else {
         token.type = TokenType::IDENTIFIER;
     }

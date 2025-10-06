@@ -9,9 +9,15 @@ enum class TokenType {
     NEWLINE,
     BLOCK,
     COLON,
+    LPAREN,
+    RPAREN,
+    COMMA,
+    LBRACE,
+    RBRACE,
     // Reserved Words
     PRINT,
     IF,
+    DEF,
     // USER DEFINED/LITERALS
     IDENTIFIER,
     NUMBER,
