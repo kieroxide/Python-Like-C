@@ -5,7 +5,20 @@
 
 #include "src/Lexer/Lexer.hpp"
 
-enum class NodeType { PROGRAM, FUNC_NAME, PARAM, FUNC_CALL, ASSIGN, PRINT, BLOCK, IF, CONDITIONAL, OPERATOR, VARIABLE, NUMBER };
+enum class NodeType {
+    PROGRAM,
+    DEF,
+    PARAM,
+    FUNC_CALL,
+    ASSIGN,
+    PRINT,
+    BLOCK,
+    IF,
+    CONDITIONAL,
+    OPERATOR,
+    VARIABLE,
+    NUMBER
+};
 
 struct Node {
     NodeType type;

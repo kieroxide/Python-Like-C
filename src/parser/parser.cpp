@@ -83,7 +83,7 @@ unique_ptr<Node> Parser::parseFunction(const vector<Token>& tokens) {
         return nullptr;
     }
     string funcName = tokens[tokenPosition++].value;
-    auto funcNode = make_unique<Node>(NodeType::FUNC_NAME, tokens[tokenPosition - 1], funcName);
+    auto funcNode = make_unique<Node>(NodeType::DEF, tokens[tokenPosition - 1], funcName);
 
     // Expect opening parenthesis
     if (tokenPosition >= tokenLength || tokens[tokenPosition].type != TokenType::LPAREN) {
