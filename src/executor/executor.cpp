@@ -13,13 +13,13 @@ int executeFile(std::string filePath) {
     string fileContents = utility::readFile(filePath);
     string fileContentsFormatted = utility::convertTabs(fileContents);
 
-    auto lexer = new Lexer();
+    auto lexer = make_unique<Lexer>();
     auto tokens = lexer->tokenize(fileContentsFormatted);
 
-    auto parser = new Parser();
+    auto parser = make_unique<Parser>();
     auto ast = parser->parseProgram(tokens);
 
-    auto interpreter = new Interpreter();
+    auto interpreter = make_unique<Interpreter>();
     interpreter->evaluate(ast);
 
     return 0;
