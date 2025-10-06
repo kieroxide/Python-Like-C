@@ -15,7 +15,7 @@ if (-not (Get-Command g++ -ErrorAction SilentlyContinue)) {
 
 Write-Host "Compiling main.exe into $buildDir..."
 $out = Join-Path $buildDir "main.exe"
-g++ -std=c++17 -I. src\main.cpp src\executor\executor.cpp src\lexer\lexer.cpp src\parser\parser.cpp src\interpreter\interpreter.cpp src\utility\utility.cpp -o "$out"
+g++ -std=c++17 -I. src\main.cpp src\executor\executor.cpp src\lexer\lexer.cpp src\parser\parser.cpp src\interpreter\interpreter.cpp src\scope\Scope.cpp src\utility\utility.cpp -o "$out"
 if ($LASTEXITCODE -ne 0) { Write-Error "Build failed (main.exe)"; Pop-Location; exit $LASTEXITCODE }
 Write-Host "Built $out"
 Pop-Location
