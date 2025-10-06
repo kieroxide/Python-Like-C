@@ -5,7 +5,7 @@ Push-Location $repoRoot
 
 # output folder
 $buildDir = Join-Path $repoRoot "build"
-if (-not (Test-Path $buildDir)) { New-Item -ItemType Directory -Path $buildDir | Out-Null }
+if (-not (Test-Path $buildDir)) { New-Item -ItemType Directory -Path $buildDir -Force | Out-Null }
 
 if (-not (Get-Command g++ -ErrorAction SilentlyContinue)) {
     Write-Error "g++ not found in PATH. Install MinGW or add g++ to PATH."
