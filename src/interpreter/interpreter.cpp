@@ -37,7 +37,10 @@ int Interpreter::evaluate(const unique_ptr<Node>& node) {
     switch (node->type) {
         case NodeType::PROGRAM: {
             for (int i = 0; i < node->children.size(); i++) {
-                evaluate(node->children[i]);
+                int val = evaluate(node->children[i]);
+                if (node->children[i]->type == NodeType::RETURN) {
+                    return val;
+                }
             }
             return 0;
         }
