@@ -29,13 +29,20 @@ enum class TokenType {
 struct Token {
     TokenType type;
     std::string value;
-    int lineNumber;
+    size_t lineNumber;
+    Token() {
+    }
+    Token(TokenType type, std::string value, size_t lineNumber) {
+        this->type = type;
+        this->value = value;
+        this->lineNumber = lineNumber;
+    }
 };
 
 class Lexer {
    private:
-    int lineNumber = 1;
-    int characterPosition = 0;
+    size_t lineNumber = 1;
+    size_t characterPosition = 0;
 
    public:
     static void printTokens(std::vector<Token> tokens);

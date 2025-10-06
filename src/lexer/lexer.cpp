@@ -17,17 +17,16 @@ void Lexer::printTokens(vector<Token> tokens) {
     }
 }
 
+/**
+ * Takes string and returns a vector of the whole tokenized string
+ */
 vector<Token> Lexer::tokenize(const string& code) {
     characterPosition = 0;
     lineNumber = 1;
 
     vector<Token> tokens;
 
-    // Generic Block type to denote Start of program
-    Token token = {TokenType::BLOCK, "BLOCK", lineNumber};
-    tokens.push_back(token);
-
-    const int len = static_cast<int>(code.size());
+    const size_t len = code.size();
     while (characterPosition < len) {
         auto stmtTokens = tokenize_statement(code);
         tokens.insert(tokens.end(), stmtTokens.begin(), stmtTokens.end());
@@ -36,43 +35,35 @@ vector<Token> Lexer::tokenize(const string& code) {
     return tokens;
 }
 
-/* Tokenizes a Single Statement returning a list of tokens at code end or new line*/
+/* Tokenizes a Single Statement token Vector which is defined when a newline character is hit*/
 vector<Token> Lexer::tokenize_statement(const string& code) {
     vector<Token> tokens;
-    int len = static_cast<int>(code.size());
+    size_t len = code.size();
 
-    // Count leading spaces and emit one INDENT token per 4-space group (only at start of newline)
     const bool isAtStartOfNewLine = characterPosition == 0 || code[characterPosition - 1] == '\n';
     if (isAtStartOfNewLine) {
-        int count = 0;
+        size_t count = 0;
+        // Count all whitespace to check total number of indents
         while (characterPosition < len && code[characterPosition] == ' ') {
             ++count;
             ++characterPosition;
         }
+        // Emit indent token per 4 spaces
+        size_t groups = count / 4;
 
-        int groups = count / 4;
-        for (int g = 0; g < groups; ++g) {
+        if (count % 4 != 0) {
+            cerr << "WARNING: Indentation on line " << lineNumber << " is " << count
+                 << " spaces, not a multiple of 4\n";
+        }
+        
+        for (size_t g = 0; g < groups; ++g) {
             tokens.push_back({TokenType::INDENT, "INDENT", lineNumber});
         }
     }
 
     // Tokenize rest of the line
     while (characterPosition < len) {
-        char c = code[characterPosition];
-        if (c == ' ') {
-            ++characterPosition;  // main loop consumes spaces
-            continue;
-        }
-        if (c == '/' && characterPosition + 1 < len && code[characterPosition + 1] == '/') {
-            while (characterPosition < len && code[characterPosition] != '\n') {
-                ++characterPosition;
-            }
-            continue;
-        }
-        if (c == '\r') {
-            ++characterPosition;
-            continue;
-        }  // handle CR in CRLF
+        const char c = code[characterPosition];
 
         if (isalpha(static_cast<unsigned char>(c))) {
             Token token = tokenizeAlpha(code);
@@ -84,57 +75,79 @@ vector<Token> Lexer::tokenize_statement(const string& code) {
 
         if (isdigit(static_cast<unsigned char>(c))) {
             Token token = tokenizeDigits(code);
-            token.lineNumber = lineNumber;
             tokens.push_back(token);
             ++characterPosition;  // advance past last digit consumed by helper
             continue;
         }
 
-        // two-char operator '=='
-        if (c == '=' && characterPosition + 1 < len && code[characterPosition + 1] == '=') {
-            tokens.push_back({TokenType::EQUALS, "==", lineNumber});
-            characterPosition += 2;  // consume both '=' chars
-            continue;
-        }
-
         switch (c) {
-            case '=':
-                tokens.push_back({TokenType::ASSIGN, "=", lineNumber});
+            case ' ':
+                ++characterPosition;  // main loop consumes spaces
+                break;
+
+            case '/':
+                if (characterPosition + 1 < len && code[characterPosition + 1] == '/') {
+                    while (characterPosition < len && code[characterPosition] != '\n') {
+                        ++characterPosition;
+                    }
+                } else {
+                    tokens.push_back({TokenType::DIVIDE, "/", lineNumber});
+                    ++characterPosition;
+                }
+                break;
+
+            case '\r':
                 ++characterPosition;
                 break;
+
+            case '=':
+                if (c == '=' && characterPosition + 1 < len && code[characterPosition + 1] == '=') {
+                    // two-char operator '=='
+                    tokens.push_back({TokenType::EQUALS, "==", lineNumber});
+                    characterPosition += 2;  // consume both '=' chars
+                } else {
+                    // one-char assignment
+                    tokens.push_back({TokenType::ASSIGN, "=", lineNumber});
+                    ++characterPosition;
+                }
+                break;
+
             case '+':
                 tokens.push_back({TokenType::PLUS, "+", lineNumber});
                 ++characterPosition;
                 break;
+
             case '-':
                 tokens.push_back({TokenType::SUBTRACT, "-", lineNumber});
                 ++characterPosition;
                 break;
+
             case '*':
                 tokens.push_back({TokenType::MULTIPLY, "*", lineNumber});
                 ++characterPosition;
                 break;
-            case '/':
-                tokens.push_back({TokenType::DIVIDE, "/", lineNumber});
-                ++characterPosition;
-                break;
+
             case '<':
                 tokens.push_back({TokenType::LESSTHAN, "<", lineNumber});
                 ++characterPosition;
                 break;
+
             case '>':
                 tokens.push_back({TokenType::GREATERTHAN, ">", lineNumber});
                 ++characterPosition;
                 break;
+
             case ':':
                 tokens.push_back({TokenType::COLON, ":", lineNumber});
                 ++characterPosition;
                 break;
+
             case '\n':
                 tokens.push_back({TokenType::NEWLINE, "NEWLINE", lineNumber});
                 ++lineNumber;
                 ++characterPosition;
                 return tokens;
+
             default:
                 cerr << "ERROR LEXING line " << lineNumber << " char '" << c << "'\n";
                 ++characterPosition;  // avoid infinite loop on unknown char
@@ -150,11 +163,13 @@ Token Lexer::tokenizeAlpha(const string& code) {
     string str;
     str.push_back(c);
 
+    // Look over the string of chars and push to the string
     while (characterPosition + 1 < code.size() && isalpha(code[characterPosition + 1])) {
         c = code[++characterPosition];
         str.push_back(c);
     }
 
+    // Check for special reserved words
     Token token;
     if (str == "if") {
         token.type = TokenType::IF;
@@ -175,6 +190,7 @@ Token Lexer::tokenizeDigits(const string& code) {
     char c = code[characterPosition];
     str.push_back(c);
 
+    // Looks for all digits of ahead of first digit
     while (characterPosition + 1 < code.size() && isdigit(code[characterPosition + 1])) {
         c = code[++characterPosition];
         str.push_back(c);
@@ -183,6 +199,6 @@ Token Lexer::tokenizeDigits(const string& code) {
     Token token;
     token.type = TokenType::NUMBER;
     token.value = str;
-
+    token.lineNumber = lineNumber;
     return token;
 }
