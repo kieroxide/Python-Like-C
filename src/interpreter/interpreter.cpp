@@ -7,6 +7,28 @@
 
 using namespace std;
 
+// Deconstructor
+Interpreter::~Interpreter() {
+    // Clean up any remaining scopes
+    while (currentScope != &globalScope) {
+        popScope();
+    }
+}
+
+// Adds a new scope to the scope stack
+void Interpreter::pushScope() {
+    currentScope = new Scope(currentScope);
+}
+
+// Pop the current scope and its parent become the new current scope
+void Interpreter::popScope() {
+    if (currentScope != &globalScope) {
+        Scope* parent = currentScope->getParent();
+        delete currentScope;
+        currentScope = parent;
+    }
+}
+
 int Interpreter::evaluate(const unique_ptr<Node>& node) {
     if (!node) {
         cerr << "ERROR: Attempted to evaluate null node" << endl;
@@ -14,6 +36,16 @@ int Interpreter::evaluate(const unique_ptr<Node>& node) {
     }
     switch (node->type) {
         case NodeType::BLOCK:
+            pushScope();
+
+            // Evaluate all statements in the block
+            for (const auto& child : node->children) {
+                evaluate(child);
+            }
+
+            popScope();
+            return 0;
+
         case NodeType::PROGRAM: {
             for (int i = 0; i < node->children.size(); i++) {
                 evaluate(node->children[i]);
@@ -61,9 +93,10 @@ int Interpreter::evaluate(const unique_ptr<Node>& node) {
             }
 
         case NodeType::VARIABLE: {
-            auto var = variables.find(node->value);
-            if (var != variables.end()) {
-                return var->second;
+            auto varName = node->value;
+            auto var = this->currentScope->lookup(varName);
+            if (var.first) {
+                return var.second;
             }
             cerr << "ERROR: Variable '" << node->value << "' not found at line " << node->token.lineNumber << endl;
             return 0;
@@ -101,7 +134,7 @@ int Interpreter::evaluate(const unique_ptr<Node>& node) {
         case NodeType::ASSIGN: {
             string varName = node->token.value;
             int value = evaluate(node->children[0]);
-            variables[varName] = value;
+            this->currentScope->update(varName, value);
             return value;
         }
 
