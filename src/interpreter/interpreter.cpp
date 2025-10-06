@@ -43,7 +43,7 @@ int Interpreter::evaluate(const unique_ptr<Node>& node) {
         }
 
         case NodeType::FUNC_CALL:
-            evaluateFunctionCall(node);
+            return evaluateFunctionCall(node);
 
         case NodeType::DEF: {
             string funcName = node->value;
@@ -63,7 +63,7 @@ int Interpreter::evaluate(const unique_ptr<Node>& node) {
 
             // Evaluate all statements in the block
             for (const auto& child : node->children) {
-                int result = evaluate(child);
+                result = evaluate(child);
                 if (child->type == NodeType::RETURN) {
                     popScope();
                     return result;
