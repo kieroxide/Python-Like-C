@@ -1,4 +1,4 @@
-#include "Lexer.hpp"
+#include "src/Lexer/Lexer.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -6,6 +6,7 @@
 #include <string>
 
 #include "src/Utility/utility.hpp"
+
 
 using namespace std;
 
@@ -206,7 +207,7 @@ Token Lexer::tokenizeAlpha(const string& code) {
         token.type = TokenType::DEF;
     } else if (str == "return") {
         token.type = TokenType::RETURN;
-    }else {
+    } else {
         token.type = TokenType::IDENTIFIER;
     }
 

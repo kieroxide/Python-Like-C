@@ -1,9 +1,10 @@
-#include "Parser.hpp"
+#include "src/Parser/Parser.hpp"
 
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
+
 
 using namespace std;
 
@@ -385,7 +386,7 @@ unique_ptr<Node> Parser::parseFactor(const vector<Token>& tokens) {
     if (tokenPosition >= tokenLength) {
         return nullptr;
     }
-    
+
     Token token = tokens[tokenPosition++];
 
     if (token.type == TokenType::NUMBER) {
@@ -397,7 +398,7 @@ unique_ptr<Node> Parser::parseFactor(const vector<Token>& tokens) {
             // Restore position to before identifier
             return parseFunctionCall(tokens);
         }
-        
+
         // Otherwise it's a variable
         auto variable = make_unique<Node>(NodeType::VARIABLE, token, token.value);
         return variable;
