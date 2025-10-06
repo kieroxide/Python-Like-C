@@ -1,0 +1,31 @@
+name: C++ Test
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+
+jobs:
+    build-and-test:
+        runs-on: ${{ matrix.os }}
+        strategy:
+            matrix:
+                os: [windows-latest, ubuntu-latest]
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v3
+
+            - name: Install dependencies (Ubuntu)
+              if: runner.os == 'Linux'
+              run: sudo apt-get update && sudo apt-get install -y g++
+
+            - name: Build tests
+              run: |
+                  mkdir -p build
+                  g++ -std=c++17 -I. src/executor/executor.cpp src/lexer/lexer.cpp src/parser/parser.cpp src/interpreter/interpreter.cpp src/scope/Scope.cpp src/utility/utility.cpp tests/src/runTests.cpp -o build/run_tests.exe
+
+            - name: Run tests
+              run: |
+                  ./build/run_tests.exe
