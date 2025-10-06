@@ -1,4 +1,4 @@
-#include "Utility.hpp"
+#include "utility.hpp"
 
 #include <fstream>
 #include <iostream>
