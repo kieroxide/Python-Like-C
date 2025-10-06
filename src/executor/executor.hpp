@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
 
-namespace Executor {
+namespace executor {
 int executeFile(std::string filePath);
 }

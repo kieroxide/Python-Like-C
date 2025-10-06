@@ -1,13 +1,13 @@
-#include "Executor.hpp"
+#include "src/Executor/executor.hpp"
 
 #include "src/Interpreter/Interpreter.hpp"
 #include "src/Lexer/Lexer.hpp"
 #include "src/Parser/Parser.hpp"
-#include "src/Utility/Utility.hpp"
+#include "src/Utility/utility.hpp"
 
 using namespace std;
 
-namespace Executor {
+namespace executor {
 
 int executeFile(std::string filePath) {
     string fileContents = utility::readFile(filePath);
@@ -24,4 +24,4 @@ int executeFile(std::string filePath) {
 
     return 0;
 }
-}  // namespace Executor
+}  // namespace executor
