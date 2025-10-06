@@ -1,8 +1,10 @@
 x = 4
+result = 0
 if x > 0:
-    print 1
+    result = result + 1
     if x == 4:
-        print 2
+        result = result + 2
         if x > 10:
-            print 3
-print 99
+            result = result + 3
+result = result + 99
+return result // Expected: 1 + 2 + 99 = 102

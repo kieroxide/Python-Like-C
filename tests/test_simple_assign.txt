@@ -1,7 +1,4 @@
 x = 3
-print x
 x = 5
-print x
-y = 3
-print x
-print y
+y = 7
+return x + y // Expected 12

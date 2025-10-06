@@ -3,44 +3,27 @@
 // Global variables
 x = 10
 y = 20
-print x  // 10
-print y  // 20
+result = x + y
 
 // Basic block scope
 if x > 5:
-    z = 30       // z only exists inside this block
-    print x      // 10 - can access outer scope
-    print y      // 20 - can access outer scope
-    print z      // 30 - local variable
+    z = 30
+    result = result + z
 
 // Variable shadowing
 if y > 15:
-    x = 50       // shadows the global x
-    print x      // 50 - local x
-    
-    // Nested scope
+    x = 50
+    result = result + x
     if x > 40:
-        y = 60   // shadows the global y
-        w = 70   // new local variable
-        print x  // 50 - from parent scope
-        print y  // 60 - local y
-        print w  // 70 - local variable
-    
-    // Back to first block scope
-    print x      // 50 - local x (still shadowed)
-    print y      // 20 - global y (not shadowed at this level)
-    // print w   // Error: w doesn't exist at this scope level
+        y = 60
+        w = 70
+        result = result + y + w
+    result = result + x + y
 
-// Back to global scope
-print x          // 10 - global x (not affected by shadowing)
-print y          // 20 - global y (not affected by shadowing)
-// print z       // Error: z doesn't exist at global scope
-// print w       // Error: w doesn't exist at global scope
-
-// Testing reassignment
+result = result + x + y
 a = 100
-print a         // 100
 if a == 100:
-    a = 200     // modifies a in parent scope (if there's no shadowing)
-    print a     // 200
-print a         // Implementation dependent: 200 if no block scoping, 100 if block scoping
+    a = 200
+    result = result + a
+
+return result // Expected: 660

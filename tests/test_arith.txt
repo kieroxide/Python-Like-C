@@ -1,5 +1,4 @@
 a = 2 + 3 * 4
 b = a / 5 - 1
-print a
-print b
-print 2 * a + b
+c = 2 * a + b
+return a + b + c // Expected: 14 + 1 + 29 = 44

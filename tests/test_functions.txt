@@ -12,5 +12,4 @@ expenses = 2
 
 money = add(money, income)
 money = sub(money, expenses)
-
-print money // should be 208
+return money // Expected: 208
