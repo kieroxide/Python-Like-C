@@ -50,6 +50,11 @@ unique_ptr<Node> Parser::parseStatement(const vector<Token>& tokens) {
         }
 
         case TokenType::IDENTIFIER: {
+            if (tokenPosition < tokenLength) {
+                if (tokenPosition + 1 < tokenLength && tokens[tokenPosition + 1].type == TokenType::LPAREN) {
+                    return parseFunctionCall(tokens);
+                }
+            }
             auto identifier = make_unique<Node>(NodeType::ASSIGN, token, token.value);
             unique_ptr<Node> statement = parseIdentifier(tokens);
             identifier->addChild(move(statement));
@@ -61,10 +66,131 @@ unique_ptr<Node> Parser::parseStatement(const vector<Token>& tokens) {
             return ifStmt;
         }
 
+        case TokenType::DEF: {
+            return parseFunction(tokens);
+        }
+
         default:
             // Unneeded Tokens
             return nullptr;
     }
+}
+
+unique_ptr<Node> Parser::parseFunction(const vector<Token>& tokens) {
+    // Get function name
+    if (tokenPosition >= tokenLength || tokens[tokenPosition].type != TokenType::IDENTIFIER) {
+        cerr << "Expected function name after 'def'\n";
+        return nullptr;
+    }
+    string funcName = tokens[tokenPosition++].value;
+    auto funcNode = make_unique<Node>(NodeType::FUNC_NAME, tokens[tokenPosition - 1], funcName);
+
+    // Expect opening parenthesis
+    if (tokenPosition >= tokenLength || tokens[tokenPosition].type != TokenType::LPAREN) {
+        cerr << "Expected '(' after function name\n";
+        return nullptr;
+    }
+    ++tokenPosition;  // consume (
+
+    // Parse parameters
+    parseParams(tokens, funcNode);
+
+    // Expect opening brace
+    if (tokenPosition >= tokenLength || tokens[tokenPosition].type != TokenType::LBRACE) {
+        cerr << "Expected '{' to begin function body\n";
+        return nullptr;
+    }
+    ++tokenPosition;  // consume {
+
+    // Parse function body as a block
+    auto blockNode = make_unique<Node>(NodeType::BLOCK, "BLOCK");
+
+    // Keep parsing statements until we hit closing brace
+    while (tokenPosition < tokenLength && tokens[tokenPosition].type != TokenType::RBRACE) {
+        if (tokens[tokenPosition].type == TokenType::NEWLINE) {
+            ++tokenPosition;  // skip newlines
+            continue;
+        }
+
+        auto stmt = parseStatement(tokens);
+        if (stmt) {
+            blockNode->addChild(move(stmt));
+        }
+    }
+
+    // Consume closing brace
+    if (tokenPosition >= tokenLength || tokens[tokenPosition].type != TokenType::RBRACE) {
+        cerr << "Expected '}' to end function body\n";
+        return nullptr;
+    }
+    ++tokenPosition;  // consume }
+
+    funcNode->addChild(move(blockNode));
+    return funcNode;
+}
+
+unique_ptr<Node> Parser::parseParams(const vector<Token>& tokens, unique_ptr<Node>& funcNode) {
+    // Loop until we see a closing parenthesis
+    bool first = true;
+    while (tokenPosition < tokenLength && tokens[tokenPosition].type != TokenType::RPAREN) {
+        // Handle comma between parameters (but not before first param)
+        if (!first) {
+            if (tokens[tokenPosition].type == TokenType::COMMA) {
+                ++tokenPosition;  // consume comma
+            } else {
+                cerr << "Expected ',' between parameters\n";
+                return;
+            }
+        }
+
+        // Parse parameter name (must be identifier)
+        if (tokenPosition >= tokenLength || tokens[tokenPosition].type != TokenType::IDENTIFIER) {
+            cerr << "Expected parameter name\n";
+            return;
+        }
+
+        // Create parameter node
+        auto paramNode = make_unique<Node>(NodeType::PARAM, tokens[tokenPosition], tokens[tokenPosition].value);
+        funcNode->addChild(move(paramNode));
+        ++tokenPosition;  // consume parameter name
+
+        first = false;
+    }
+
+    // Consume closing parenthesis
+    if (tokenPosition >= tokenLength || tokens[tokenPosition].type != TokenType::RPAREN) {
+        cerr << "Expected ')' after parameters\n";
+        return;
+    }
+    ++tokenPosition;  // consume )
+}
+
+unique_ptr<Node> Parser::parseFunctionCall(const vector<Token>& tokens) {
+    // Get function name
+    if (tokenPosition >= tokenLength || tokens[tokenPosition].type != TokenType::IDENTIFIER) {
+        cerr << "Expected function name\n";
+        return nullptr;
+    }
+    string funcName = tokens[tokenPosition++].value;
+    auto callNode = make_unique<Node>(NodeType::FUNC_CALL, tokens[tokenPosition - 1], funcName);
+
+    // Get Parameters
+    if (tokenPosition >= tokenLength || tokens[tokenPosition].type != TokenType::LPAREN) {
+        cerr << "Expected a '(' \n";
+        return nullptr;
+    }
+    ++tokenPosition;  // Consume '('
+
+    parseParams(tokens, callNode);
+
+    // Check closing parameter
+    if (tokenPosition >= tokenLength || tokens[tokenPosition].type != TokenType::RPAREN) {
+        cerr << "Expected a ')' \n";
+        return nullptr;
+    }
+    ++tokenPosition;  // Consume ')'
+
+    return callNode;
 }
 
 unique_ptr<Node> Parser::parseIf(const vector<Token>& tokens) {
