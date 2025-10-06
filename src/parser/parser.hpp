@@ -10,21 +10,34 @@ enum class NodeType { PROGRAM, ASSIGN, PRINT, BLOCK, IF, CONDITIONAL, OPERATOR, 
 struct Node {
     NodeType type;
     Token token;
+    std::string value;
 
     std::vector<std::unique_ptr<Node>> children;
 
-    std::string value;
-
     void addChild(std::unique_ptr<Node> child) {
         children.push_back(std::move(child));
+    }
+
+    Node() {
+    }
+
+    Node(NodeType type, std::string value) {
+        this->type = type;
+        this->value = value;
+    }
+
+    Node(NodeType type, Token token, std::string value) {
+        this->type = type;
+        this->token = token;
+        this->value = value;
     }
 };
 
 class Parser {
    private:
-    int tokenPosition = 0;
-    int lineNumber = 0;
-    int tokenLength = 0;
+    size_t tokenPosition = 0;
+    size_t lineNumber = 0;
+    size_t tokenLength = 0;
 
    public:
     static void printAST(const std::unique_ptr<Node>& node, int indent = 0);
