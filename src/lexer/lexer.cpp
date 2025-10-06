@@ -5,7 +5,7 @@
 #include <sstream>
 #include <string>
 
-#include "src/Utility/Utility.hpp"
+#include "src/Utility/utility.hpp"
 
 using namespace std;
 

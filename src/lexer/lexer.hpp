@@ -37,8 +37,7 @@ struct Token {
     TokenType type;
     std::string value;
     size_t lineNumber;
-    Token() {
-    }
+    Token() {};
     Token(TokenType type, std::string value, size_t lineNumber) {
         this->type = type;
         this->value = value;
