@@ -8,24 +8,31 @@
 using namespace std;
 
 int Interpreter::evaluate(const unique_ptr<Node>& node) {
-    // cout << "\nCurrentNODE VALUE: " << node->value << "\n";
+    if (!node) {
+        cerr << "ERROR: Attempted to evaluate null node" << endl;
+        return 0;
+    }
     switch (node->type) {
         case NodeType::BLOCK:
         case NodeType::PROGRAM: {
             for (int i = 0; i < node->children.size(); i++) {
-                // printf("\nChild: %d \n", i+1);
-                // printf("Children SIZE: %d \n \n", node->children.size());
                 evaluate(node->children[i]);
             }
             return 0;
         }
+
         case NodeType::IF: {
+            if (node->children.size() < 2) {
+                cerr << "ERROR: Malformed IF node at line " << node->token.lineNumber << endl;
+                return 0;
+            }
             int condition = evaluate(node->children[0]);
             if (condition != 0) {
                 evaluate(node->children[1]);
             }
             return 0;
         }
+
         case NodeType::CONDITIONAL: {
             int left = evaluate(node->children[0]);
             int right = evaluate(node->children[1]);
@@ -40,16 +47,28 @@ int Interpreter::evaluate(const unique_ptr<Node>& node) {
             }
             return 0;
         }
+
         case NodeType::NUMBER:
-            return stoi(node->value);
+            try {
+                return stoi(node->value);
+            } catch (const std::invalid_argument&) {
+                cerr << "ERROR: Invalid number format '" << node->value << "' at line " << node->token.lineNumber
+                     << endl;
+                return 0;
+            } catch (const std::out_of_range&) {
+                cerr << "ERROR: Number out of range '" << node->value << "' at line " << node->token.lineNumber << endl;
+                return 0;
+            }
+
         case NodeType::VARIABLE: {
             auto var = variables.find(node->value);
             if (var != variables.end()) {
                 return var->second;
             }
-            cout << "VARIABLE NOT FOUND";
+            cerr << "ERROR: Variable '" << node->value << "' not found at line " << node->token.lineNumber << endl;
             return 0;
         }
+
         case NodeType::OPERATOR: {
             int left = evaluate(node->children[0]);
             int right = evaluate(node->children[1]);
@@ -63,24 +82,32 @@ int Interpreter::evaluate(const unique_ptr<Node>& node) {
                 return left * right;
             }
             if (node->value == "/") {
+                if (right == 0) {
+                    cerr << "ERROR: Division by zero at line " << node->token.lineNumber << endl;
+                    return 0;
+                }
                 return left / right;
             } else {
                 return 0;
             }
         }
+
         case NodeType::PRINT: {
             string result = to_string(evaluate(node->children[0]));
             cout << result << endl;
             return 0;
         }
+
         case NodeType::ASSIGN: {
             string varName = node->token.value;
             int value = evaluate(node->children[0]);
             variables[varName] = value;
             return value;
         }
+
         default:
-            cout << "ERROR INVALID TOKEN TYPE";
+            cerr << "ERROR: Unknown node type (" << static_cast<int>(node->type) << ") at line "
+                 << node->token.lineNumber << endl;
             return 0;
     }
     return 0;
