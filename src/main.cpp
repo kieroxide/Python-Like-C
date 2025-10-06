@@ -1,7 +1,6 @@
 #include <iostream>
 
-#include "src\Executor\executor.hpp"
-
+#include "src/Executor/executor.hpp"
 
 using namespace std;
 
