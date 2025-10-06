@@ -50,11 +50,10 @@ unique_ptr<Node> Parser::parseStatement(const vector<Token>& tokens) {
         }
 
         case TokenType::IDENTIFIER: {
-            if (tokenPosition < tokenLength) {
-                if (tokenPosition + 1 < tokenLength && tokens[tokenPosition + 1].type == TokenType::LPAREN) {
-                    return parseFunctionCall(tokens);
-                }
+            if (tokenPosition < tokenLength && tokens[tokenPosition].type == TokenType::LPAREN) {
+                return parseFunctionCall(tokens);
             }
+
             auto identifier = make_unique<Node>(NodeType::ASSIGN, token, token.value);
             unique_ptr<Node> statement = parseIdentifier(tokens);
             identifier->addChild(move(statement));
@@ -139,7 +138,7 @@ unique_ptr<Node> Parser::parseFunction(const vector<Token>& tokens) {
     return funcNode;
 }
 
-unique_ptr<Node> Parser::parseParams(const vector<Token>& tokens, unique_ptr<Node>& funcNode) {
+void Parser::parseParams(const vector<Token>& tokens, unique_ptr<Node>& funcNode) {
     // Loop until we see a closing parenthesis
     bool first = true;
     while (tokenPosition < tokenLength && tokens[tokenPosition].type != TokenType::RPAREN) {
@@ -176,29 +175,45 @@ unique_ptr<Node> Parser::parseParams(const vector<Token>& tokens, unique_ptr<Nod
 }
 
 unique_ptr<Node> Parser::parseFunctionCall(const vector<Token>& tokens) {
-    // Get function name
-    if (tokenPosition >= tokenLength || tokens[tokenPosition].type != TokenType::IDENTIFIER) {
-        cerr << "Expected function name\n";
-        return nullptr;
-    }
-    string funcName = tokens[tokenPosition++].value;
+    // Function name token was already consumed
+    string funcName = tokens[tokenPosition - 1].value;
     auto callNode = make_unique<Node>(NodeType::FUNC_CALL, tokens[tokenPosition - 1], funcName);
 
-    // Get Parameters
+    // Consume the '('
     if (tokenPosition >= tokenLength || tokens[tokenPosition].type != TokenType::LPAREN) {
-        cerr << "Expected a '(' \n";
+        cerr << "Expected '(' after function name\n";
         return nullptr;
     }
-    ++tokenPosition;  // Consume '('
+    ++tokenPosition;
 
-    parseParams(tokens, callNode);
+    // Parse arguments
+    bool first = true;
+    while (tokenPosition < tokenLength && tokens[tokenPosition].type != TokenType::RPAREN) {
+        if (!first) {
+            if (tokens[tokenPosition].type == TokenType::COMMA) {
+                ++tokenPosition;
+            } else {
+                cerr << "Expected ',' between arguments\n";
+                return nullptr;
+            }
+        }
 
-    // Check closing parameter
+        auto arg = parseExpression(tokens);
+        if (arg) {
+            callNode->addChild(move(arg));
+        } else {
+            cerr << "Invalid argument in function call\n";
+            return nullptr;
+        }
+        first = false;
+    }
+
+    // Consume ')'
     if (tokenPosition >= tokenLength || tokens[tokenPosition].type != TokenType::RPAREN) {
-        cerr << "Expected a ')' \n";
+        cerr << "Expected ')' to close function call\n";
         return nullptr;
     }
-    ++tokenPosition;  // Consume ')'
+    ++tokenPosition;
 
     return callNode;
 }
@@ -286,7 +301,12 @@ unique_ptr<Node> Parser::parseConditional(const vector<Token>& tokens) {
 }
 
 unique_ptr<Node> Parser::parseIdentifier(const vector<Token>& tokens) {
-    // Check if next token is '='
+    // If we see a '(' here, it's a function call
+    if (tokenPosition < tokens.size() && tokens[tokenPosition].type == TokenType::LPAREN) {
+        return parseFunctionCall(tokens);
+    }
+
+    // Otherwise, we expect an assignment
     if (tokenPosition < tokens.size() && tokens[tokenPosition].type == TokenType::ASSIGN) {
         ++tokenPosition;  // consume the '=' token
         return parseExpression(tokens);  // Parse right side of assignment
@@ -363,16 +383,22 @@ unique_ptr<Node> Parser::parseTerm(const vector<Token>& tokens) {
 
 unique_ptr<Node> Parser::parseFactor(const vector<Token>& tokens) {
     if (tokenPosition >= tokenLength) {
-        cerr << "Error: Unexpected end of tokens while parsing factor\n";
         return nullptr;
     }
-
+    
     Token token = tokens[tokenPosition++];
 
     if (token.type == TokenType::NUMBER) {
         auto number = make_unique<Node>(NodeType::NUMBER, token, token.value);
         return number;
     } else if (token.type == TokenType::IDENTIFIER) {
+        // Check if this is a function call
+        if (tokenPosition < tokenLength && tokens[tokenPosition].type == TokenType::LPAREN) {
+            // Restore position to before identifier
+            return parseFunctionCall(tokens);
+        }
+        
+        // Otherwise it's a variable
         auto variable = make_unique<Node>(NodeType::VARIABLE, token, token.value);
         return variable;
     } else {
