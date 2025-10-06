@@ -23,8 +23,8 @@ jobs:
 
             - name: Build tests
               run: |
-                  mkdir -p build
-                  g++ -std=c++17 -I. src/executor/executor.cpp src/lexer/lexer.cpp src/parser/parser.cpp src/interpreter/interpreter.cpp src/scope/Scope.cpp src/utility/utility.cpp tests/src/runTests.cpp -o build/run_tests.exe
+                  mkdir -p build || true
+                   g++ -std=c++17 -I. src/Executor/executor.cpp src/Lexer/Lexer.cpp src/Parser/Parser.cpp src/Interpreter/Interpreter.cpp src/Scope/Scope.cpp src/Utility/utility.cpp tests/src/runTests.cpp -o build/run_tests.exe
 
             - name: Run tests
               run: |
