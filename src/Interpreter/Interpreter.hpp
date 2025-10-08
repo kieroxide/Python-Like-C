@@ -1,8 +1,8 @@
 #pragma once
 #include <unordered_map>
 
-#include "../Parser/Parser.hpp"
-#include "../Scope/Scope.hpp"
+#include "../parser/parser.hpp"
+#include "../scope/scope.hpp"
 
 class Interpreter {
    public:

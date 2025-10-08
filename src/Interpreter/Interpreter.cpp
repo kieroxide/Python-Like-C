@@ -1,10 +1,9 @@
-#include "src/Interpreter/Interpreter.hpp"
+#include "src/interpreter/interpreter.hpp"
 
 #include <iostream>
 #include <memory>
 #include <string>
 #include <unordered_map>
-
 
 using namespace std;
 
@@ -17,9 +16,7 @@ Interpreter::~Interpreter() {
 }
 
 // Adds a new scope to the scope stack
-void Interpreter::pushScope() {
-    currentScope = new Scope(currentScope);
-}
+void Interpreter::pushScope() { currentScope = new Scope(currentScope); }
 
 // Pop the current scope and its parent become the new current scope
 void Interpreter::popScope() {

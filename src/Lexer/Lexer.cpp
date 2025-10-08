@@ -1,12 +1,11 @@
-#include "src/Lexer/Lexer.hpp"
+#include "src/lexer/lexer.hpp"
 
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
 
-#include "src/Utility/utility.hpp"
-
+#include "src/utility/utility.hpp"
 
 using namespace std;
 
@@ -32,7 +31,7 @@ vector<Token> Lexer::tokenize(const string& code) {
         auto stmtTokens = tokenize_statement(code);
         tokens.insert(tokens.end(), stmtTokens.begin(), stmtTokens.end());
     }
-
+    tokens.push_back(Token(TokenType::_EOF, "END", lineNumber));
     return tokens;
 }
 

@@ -1,4 +1,4 @@
-#include "Scope.hpp"
+#include "scope.hpp"
 
 /**
  * Returns parent of scope

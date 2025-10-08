@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "src/Lexer/Lexer.hpp"
+#include "src/lexer/Lexer.hpp"
 
 enum class NodeType {
     PROGRAM,
@@ -28,12 +28,9 @@ struct Node {
 
     std::vector<std::unique_ptr<Node>> children;
 
-    void addChild(std::unique_ptr<Node> child) {
-        children.push_back(std::move(child));
-    }
+    void addChild(std::unique_ptr<Node> child) { children.push_back(std::move(child)); }
 
-    Node() {
-    }
+    Node() {}
 
     Node(NodeType type, std::string value) {
         this->type = type;
@@ -66,25 +63,37 @@ struct Node {
 
 class Parser {
    private:
-    size_t tokenPosition = 0;
-    size_t lineNumber = 0;
+    const std::vector<Token>* tokensRef = nullptr;
+
+    const std::vector<Token>& getTokens() const {
+        static const std::vector<Token> empty{};
+        return tokensRef ? *tokensRef : empty;
+    }
+
     size_t tokenLength = 0;
+    size_t tokenPosition = 0;
 
    public:
     static void printAST(const std::unique_ptr<Node>& node, int indent = 0);
     std::unique_ptr<Node> parseProgram(const std::vector<Token>& tokens);
 
    private:
-    void parseParams(const std::vector<Token>& tokens, std::unique_ptr<Node>& funcNode);
-
-    std::unique_ptr<Node> parseFunction(const std::vector<Token>& tokens);
-    std::unique_ptr<Node> parseFunctionCall(const std::vector<Token>& tokens);
-    std::unique_ptr<Node> parseStatement(const std::vector<Token>& tokens);
-    std::unique_ptr<Node> parsePrint(const std::vector<Token>& tokens);
-    std::unique_ptr<Node> parseIdentifier(const std::vector<Token>& tokens);
-    std::unique_ptr<Node> parseIf(const std::vector<Token>& tokens);
-    std::unique_ptr<Node> parseConditional(const std::vector<Token>& tokens);
-    std::unique_ptr<Node> parseExpression(const std::vector<Token>& tokens);
-    std::unique_ptr<Node> parseTerm(const std::vector<Token>& tokens);
-    std::unique_ptr<Node> parseFactor(const std::vector<Token>& tokens);
+    bool parseParams(std::unique_ptr<Node>& funcNode);
+    bool match(TokenType t);
+    bool consume(TokenType t, const std::string& what);
+    Token const& peek() const;
+    Token const& current() const;
+    Token advance();
+    std::unique_ptr<Node> parseIndentedBlock();
+    std::unique_ptr<Node> parseBlockUntil(TokenType terminator);
+    std::unique_ptr<Node> parseFunction();
+    std::unique_ptr<Node> parseFunctionCall();
+    std::unique_ptr<Node> parseStatement();
+    std::unique_ptr<Node> parsePrint();
+    std::unique_ptr<Node> parseIdentifier();
+    std::unique_ptr<Node> parseIf();
+    std::unique_ptr<Node> parseConditional();
+    std::unique_ptr<Node> parseExpression();
+    std::unique_ptr<Node> parseTerm();
+    std::unique_ptr<Node> parseFactor();
 };
