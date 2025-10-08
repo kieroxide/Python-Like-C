@@ -16,7 +16,7 @@ jobs:
             - name: Build tests
               run: |
                   if (-not (Test-Path build)) { New-Item -ItemType Directory -Path build -Force | Out-Null }
-                  g++ -std=c++17 -I. src/Executor/executor.cpp src/Lexer/Lexer.cpp src/Parser/Parser.cpp src/Interpreter/Interpreter.cpp src/Scope/Scope.cpp src/Utility/utility.cpp tests/src/runTests.cpp -o build/run_tests.exe
+                  g++ -std=c++17 -I. src/executor/executor.cpp src/lexer/Lexer.cpp src/parser/parser_core.cpp src/parser/parser_statement.cpp src/parser/parser_expression.cpp src/parser/parser_block.cpp src/interpreter/Interpreter.cpp src/scope/Scope.cpp src/utility/utility.cpp tests/src/runTests.cpp -o build/run_tests.exe
               shell: pwsh
 
             - name: Run tests

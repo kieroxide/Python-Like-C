@@ -3,7 +3,7 @@ IndentWidth: 4
 TabWidth: 4
 UseTab: Never
 ColumnLimit: 120
-AllowShortIfStatementsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: true
 
 # Keep braces attached to control statements (K&R style)
 BreakBeforeBraces: Attach
@@ -12,7 +12,7 @@ BreakBeforeBraces: Attach
 SpaceBeforeParens: ControlStatements
 
 # Don't collapse short functions onto a single line
-AllowShortFunctionsOnASingleLine: None
+AllowShortFunctionsOnASingleLine: All
 
 # Avoid aggressive consecutive alignment — keeps diffs small
 AlignConsecutiveAssignments: false
