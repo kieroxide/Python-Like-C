@@ -18,6 +18,7 @@ enum class TokenType {
     PRINT,
     IF,
     DEF,
+    WHILE,
     // USER DEFINED/LITERALS
     IDENTIFIER,
     NUMBER,

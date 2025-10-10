@@ -206,6 +206,8 @@ Token Lexer::tokenizeAlpha(const string& code) {
         token.type = TokenType::DEF;
     } else if (str == "return") {
         token.type = TokenType::RETURN;
+    } else if (str == "while") {
+        token.type = TokenType::WHILE;
     } else {
         token.type = TokenType::IDENTIFIER;
     }
