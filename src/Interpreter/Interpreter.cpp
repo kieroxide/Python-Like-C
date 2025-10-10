@@ -43,6 +43,16 @@ int Interpreter::evaluate(const unique_ptr<Node>& node) {
             return 0;
         }
 
+        case NodeType::WHILE:{
+            // Node will contain a conditional and a block
+            const auto& conditional = node->children[0];
+            const auto& block = node->children[1];
+            while(evaluate(conditional)){
+                evaluate(block);
+            }
+            return 0;
+        }
+
         case NodeType::FUNC_CALL:
             return evaluateFunctionCall(node);
 
