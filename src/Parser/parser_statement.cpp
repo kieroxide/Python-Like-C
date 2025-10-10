@@ -47,6 +47,11 @@ unique_ptr<Node> Parser::parseStatement() {
             return parseFunction();
         }
 
+        case TokenType::WHILE: {
+            advance();
+            return parseWhile();
+        }
+        
         case TokenType::RETURN: {
             advance();
             auto returnStmt = make_unique<Node>(NodeType::RETURN, token, "RETURN");
@@ -64,6 +69,31 @@ unique_ptr<Node> Parser::parseStatement() {
     }
 }
 
+unique_ptr<Node> Parser::parseWhile() {
+    // we need to parse (conditional): (indent) -> block
+    const auto whileToken = current();  // Already consumed
+    auto whileStmt = make_unique<Node>(NodeType::WHILE, whileToken, whileToken.value);
+
+    if(!consume(TokenType::LPAREN, "(")) return nullptr;
+
+    // Consume condition
+    auto condition = parseConditional();
+    if (!condition) return nullptr;
+    whileStmt->addChild(move(condition));
+
+    if(!consume(TokenType::RPAREN, ")")) return nullptr;
+
+    if (!consume(TokenType::COLON, ":")) return nullptr;
+
+    // Consume any newLines
+    while (match(TokenType::NEWLINE));
+
+    auto block = parseIndentedBlock();
+
+    whileStmt->addChild(move(block));
+    return whileStmt;
+}
+
 unique_ptr<Node> Parser::parseIf() {
     // If was already consumed so current
     const auto ifToken = current();
@@ -79,24 +109,7 @@ unique_ptr<Node> Parser::parseIf() {
     // Consume any newLines
     while (match(TokenType::NEWLINE));
 
-    auto block = make_unique<Node>(NodeType::BLOCK, "BLOCK");
-    bool foundIndent = false;
-
-    // Loops over all concurrent indents
-    while (match(TokenType::INDENT)) {
-        foundIndent = true;
-
-        auto child = parseStatement();  // Recursive call to parseStatement
-        if (child) {
-            block->addChild(move(child));
-        }
-
-        // Consumes trailing new lines
-        while (match(TokenType::NEWLINE));
-    }
-    if (!foundIndent) {
-        cerr << "Warning: Empty if block at line " << ifToken.lineNumber << "\n";
-    }
+    auto block = parseIndentedBlock();
 
     ifStmt->addChild(move(block));
     return ifStmt;

@@ -10,6 +10,7 @@ enum class NodeType {
     DEF,
     RETURN,
     PARAM,
+    WHILE,
     FUNC_CALL,
     ASSIGN,
     PRINT,
@@ -87,6 +88,7 @@ class Parser {
     std::unique_ptr<Node> parseIndentedBlock();
     std::unique_ptr<Node> parseBlockUntil(TokenType terminator);
     std::unique_ptr<Node> parseFunction();
+    std::unique_ptr<Node> parseWhile();
     std::unique_ptr<Node> parseFunctionCall();
     std::unique_ptr<Node> parseStatement();
     std::unique_ptr<Node> parsePrint();
