@@ -15,7 +15,8 @@ int main() {
     string testsDir = "tests/";
     vector<TestCase> tests = {{"test_simple_assign.txt", 12}, {"test_arith.txt", 44},
                               {"test_conditionals.txt", 11},  {"test_nested.txt", 102},
-                              {"test_functions.txt", 208},    {"test_scope.txt", 660}};
+                              {"test_functions.txt", 208},    {"test_scope.txt", 660},
+                            {"test_while.txt", 30}};
 
     bool allPassed = true;
     for (const auto& test : tests) {

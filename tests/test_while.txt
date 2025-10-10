@@ -1,0 +1,11 @@
+iterations = 30
+i = 0
+while(i < iterations):
+    i = i + 1
+    print i
+
+// Test if while loop correctly doesnt execute if conditional is false
+while(i == 0):
+    i = i + 1
+
+return i // Should equal 30
