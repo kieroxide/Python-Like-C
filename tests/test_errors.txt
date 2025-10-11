@@ -62,13 +62,6 @@ if valid_var == 42:
 
 print                 // Empty print statement
 
-// Multi-character operators (if not supported)
-if 10 >= 5:           // >= operator might not be supported
-    print 13
-
-if 5 <= 10:           // <= operator might not be supported
-    print 14
-
 // Missing expressions
 result =              // Missing right side of assignment
 print result
