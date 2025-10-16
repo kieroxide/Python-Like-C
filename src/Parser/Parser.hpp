@@ -19,6 +19,8 @@ enum class NodeType {
     CONDITIONAL,
     OPERATOR,
     VARIABLE,
+    ARRAY,
+    INDEX,
     NUMBER
 };
 
@@ -90,6 +92,8 @@ class Parser {
     std::unique_ptr<Node> parseFunction();
     std::unique_ptr<Node> parseWhile();
     std::unique_ptr<Node> parseFunctionCall();
+    std::unique_ptr<Node> parseIndex(std::unique_ptr<Node>& varNode);
+    std::unique_ptr<Node> parseIndexExpr();
     std::unique_ptr<Node> parseStatement();
     std::unique_ptr<Node> parsePrint();
     std::unique_ptr<Node> parseIdentifier();
