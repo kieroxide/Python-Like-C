@@ -23,7 +23,7 @@ bool Parser::consume(TokenType type, const string& what) {
     return false;
 }
 
-/* Returns Reference to current current without advancing position*/
+/* Returns Reference to current token without advancing position*/
 Token const& Parser::peek() const {
     static const Token eofToken{TokenType::_EOF, "EOF"};
     if (tokenPosition < tokenLength) {
