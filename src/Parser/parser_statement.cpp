@@ -25,15 +25,38 @@ unique_ptr<Node> Parser::parseStatement() {
             auto idToken = advance();
             if (peek().type == TokenType::LPAREN) {
                 return parseFunctionCall();
+            } else if (peek().type == TokenType::LSQUARE) {
+                // Create a variable node first
+                auto varNode = make_unique<Node>(NodeType::VARIABLE, idToken, idToken.value);
+
+                // Parse the index to create index node
+                auto indexNode = parseIndex(varNode);
+
+                // If assignment follows, create assign node with index as left child
+                if (peek().type == TokenType::ASSIGN) {
+                    advance();  // consume =
+                    auto assignNode = make_unique<Node>(NodeType::ASSIGN, idToken, "ASSIGN");
+                    assignNode->addChild(move(indexNode)); 
+                    auto rhs = parseExpression();  // RHS = expression
+                    assignNode->addChild(move(rhs));
+                    return move(assignNode);
+                }
+
+                // Just returning the index expression for array access
+                return move(indexNode);
             }
 
-            auto identifier = make_unique<Node>(NodeType::ASSIGN, idToken, idToken.value);
+            // Else we just assign the variable to a regular assignment
+            auto assignNode = make_unique<Node>(NodeType::ASSIGN, idToken.value);
+            auto variable = make_unique<Node>(NodeType::VARIABLE, idToken, idToken.value);
+            assignNode->addChild(move(variable));
+
             auto statement = parseIdentifier();
             if (statement) {
-                identifier->addChild(move(statement));
+                assignNode->addChild(move(statement));
             }
 
-            return identifier;
+            return move(assignNode);
         }
 
         case TokenType::IF: {
@@ -51,7 +74,7 @@ unique_ptr<Node> Parser::parseStatement() {
             advance();
             return parseWhile();
         }
-        
+
         case TokenType::RETURN: {
             advance();
             auto returnStmt = make_unique<Node>(NodeType::RETURN, token, "RETURN");
@@ -74,14 +97,14 @@ unique_ptr<Node> Parser::parseWhile() {
     const auto whileToken = current();  // Already consumed
     auto whileStmt = make_unique<Node>(NodeType::WHILE, whileToken, whileToken.value);
 
-    if(!consume(TokenType::LPAREN, "(")) return nullptr;
+    if (!consume(TokenType::LPAREN, "(")) return nullptr;
 
     // Consume condition
     auto condition = parseConditional();
     if (!condition) return nullptr;
     whileStmt->addChild(move(condition));
 
-    if(!consume(TokenType::RPAREN, ")")) return nullptr;
+    if (!consume(TokenType::RPAREN, ")")) return nullptr;
 
     if (!consume(TokenType::COLON, ":")) return nullptr;
 
@@ -132,7 +155,6 @@ unique_ptr<Node> Parser::parsePrint() {
         cerr << "Error: Empty print statement at line " << peek().lineNumber << "\n";
         return nullptr;
     }
-
     unique_ptr<Node> node = parseExpression();
     return node;
 }
@@ -163,4 +185,23 @@ unique_ptr<Node> Parser::parseFunctionCall() {
     }
     if (!consume(TokenType::RPAREN, ")")) return nullptr;
     return callNode;
+}
+
+unique_ptr<Node> Parser::parseIndexExpr() {
+    if (!consume(TokenType::LSQUARE, "[")) return nullptr;
+    auto index = parseExpression();
+    if (!consume(TokenType::RSQUARE, "]")) return nullptr;
+    return move(index);
+}
+
+// Parses a index access node
+unique_ptr<Node> Parser::parseIndex(unique_ptr<Node>& varNode) {
+    // parse indexExpr and create index node and return
+    auto indexNode = make_unique<Node>(NodeType::INDEX, "index");
+    auto index = parseIndexExpr();
+
+    indexNode->addChild(move(varNode));
+    indexNode->addChild(move(index));
+
+    return move(indexNode);
 }
