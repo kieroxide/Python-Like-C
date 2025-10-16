@@ -1,21 +1,62 @@
 # Build main.exe (interpreter)
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$repoRoot = Resolve-Path (Join-Path $scriptDir "..")
+$repoRoot = (Resolve-Path (Join-Path $scriptDir "..")).Path
 Push-Location $repoRoot
 
-# Where to put build artifacts
+# prepare folders
 $buildDir = Join-Path $repoRoot "build"
+$objDir = Join-Path $buildDir "obj"
 if (-not (Test-Path $buildDir)) { New-Item -ItemType Directory -Path $buildDir -Force | Out-Null }
+if (-not (Test-Path $objDir)) { New-Item -ItemType Directory -Path $objDir -Force | Out-Null }
 
+# check g++
 if (-not (Get-Command g++ -ErrorAction SilentlyContinue)) {
-    Write-Error "g++ not found in PATH. Install MinGW or add g++ to PATH."
-    Pop-Location
-    exit 1
+    Write-Error "g++ not found in PATH. Install MinGW-w64 / MSYS2 or add g++ to PATH."
+    Pop-Location; exit 1
+}
+$gccVersion = (& g++ -dumpversion).Trim()
+try { $major = [int]($gccVersion.Split('.')[0]) } catch { $major = 0 }
+if ($major -lt 7) {
+    Write-Warning "g++ version $gccVersion looks older than recommended (>=7). Builds may still work, but C++17 features might be missing."
 }
 
-Write-Host "Compiling main.exe into $buildDir..."
+Write-Host "Using g++ version $gccVersion"
+
+# compiler flags as arrays (so PowerShell passes them as separate args)
+$cxx = "g++"
+$cxxflags = @("-std=c++17", "-O2", "-g")
+$includeFlags = @("-I.")
+
+# gather source files under src (exclude tests)
+$srcFiles = Get-ChildItem -Path (Join-Path $repoRoot "src") -Recurse -Filter *.cpp | Where-Object { $_.FullName -notmatch "\\tests\\" } | ForEach-Object { $_.FullName }
+
+if ($srcFiles.Count -eq 0) {
+    Write-Error "No source files found under src/"
+    Pop-Location; exit 1
+}
+
+function Get-ObjPath($srcFull) {
+    $rel = $srcFull.Substring($repoRoot.Length).TrimStart('\', '/')
+    $san = ($rel -replace '[\\/:]', '_') -replace '[^A-Za-z0-9_.-]', '_'
+    return Join-Path $objDir ($san + ".o")
+}
+
+# compile
+foreach ($src in $srcFiles) {
+    $obj = Get-ObjPath $src
+    if (-not (Test-Path $obj) -or (Get-Item $src).LastWriteTime -gt (Get-Item $obj).LastWriteTime) {
+        Write-Host "Compiling $src -> $obj"
+        & $cxx $cxxflags $includeFlags -c $src -o $obj
+        if ($LASTEXITCODE -ne 0) { Write-Error "Failed compiling $src"; Pop-Location; exit $LASTEXITCODE }
+    }
+}
+
+# link
 $out = Join-Path $buildDir "main.exe"
-g++ -std=c++17 -I. src/main.cpp src/executor/executor.cpp src/lexer/Lexer.cpp src/parser/parser_core.cpp src/parser/parser_statement.cpp src/parser/parser_expression.cpp src/parser/parser_block.cpp src/interpreter/Interpreter.cpp src/scope/Scope.cpp src/utility/utility.cpp -o "$out"
-if ($LASTEXITCODE -ne 0) { Write-Error "Build failed (main.exe)"; Pop-Location; exit $LASTEXITCODE }
-Write-Host "Built $out"
+Write-Host "Linking to $out"
+$objs = Get-ChildItem $objDir -Filter *.o | ForEach-Object { $_.FullName }
+& $cxx $cxxflags $objs -o $out
+if ($LASTEXITCODE -ne 0) { Write-Error "Linking failed"; Pop-Location; exit $LASTEXITCODE }
+
+Write-Host "Built $out successfully."
 Pop-Location
