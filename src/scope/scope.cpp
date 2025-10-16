@@ -1,16 +1,16 @@
 #include "scope.hpp"
 
+#include "src/scope/value.hpp"
+
 /**
  * Returns parent of scope
  */
-Scope* Scope::getParent() {
-    return parent;
-}
+Scope* Scope::getParent() { return parent; }
 
 /**
  *  Updates variable in the scope. if not found adds new variable to map
  */
-void Scope::update(const std::string& variableName, const int value) {
+void Scope::update(const std::string& variableName, const Value value) {
     // Check if variable exists in this scope (direct access)
     auto it = variables.find(variableName);
     if (it != variables.end()) {
@@ -18,9 +18,9 @@ void Scope::update(const std::string& variableName, const int value) {
         it->second = value;
     } else if (parent) {
         // Check if variable exists in any parent scope
-        std::pair<bool, int> result = parent->lookup(variableName);
+        std::pair<bool, Value> result = parent->lookup(variableName);
         bool found = result.first;
-        
+
         if (found) {
             // Variable exists in parent, update there instead of shadowing
             parent->update(variableName, value);
@@ -34,10 +34,27 @@ void Scope::update(const std::string& variableName, const int value) {
     }
 }
 
+void Scope::updateArr(const std::string& variableName, const int index, const Value& value) {
+    // Check if variable exists in this scope (direct access)
+    auto it = variables.find(variableName);
+    if (it != variables.end()) {
+        // Variable exists in current scope, update it
+        it->second.asArray()[index] = value;
+    } else if (parent) {
+        // Check if variable exists in any parent scope
+        std::pair<bool, Value> result = parent->lookup(variableName);
+        bool found = result.first;
+
+        if (found) {
+            // Variable exists in parent, update there instead of shadowing
+            parent->updateArr(variableName, index, value);
+        }
+    }
+}
 /**
  *  Looks up a variable in this scope or parents
  */
-std::pair<bool, int> Scope::lookup(const std::string& name) {
+std::pair<bool, Value> Scope::lookup(const std::string& name) {
     auto it = variables.find(name);
     if (it != variables.end()) {
         return {true, it->second};
