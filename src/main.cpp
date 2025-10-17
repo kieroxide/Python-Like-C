@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "src/executor/executor.hpp"
+#include "src/scope/value.hpp"
 
 using namespace std;
 
@@ -10,8 +11,10 @@ int main(int argc, char* argv[]) {
         filePath = argv[1];
     }
 
-    int response = executor::executeFile(filePath);
-    if (response != 0) {
-        cerr << "Test exited with code " << response << "\n";
+    Value response = executor::executeFile(filePath);
+    if(response.isArray()){
+       cout << "Script returned array of size " << response.asArray().size();
     }
+    cout << "Script returned" << response.asInt();
+    return response.asInt();
 }
