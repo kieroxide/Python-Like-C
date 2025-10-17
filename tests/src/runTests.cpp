@@ -21,7 +21,7 @@ int main() {
     bool allPassed = true;
     for (const auto& test : tests) {
         cout << "=== Running " << test.filename << " ===\n";
-        int result = executor::executeFile(testsDir + test.filename);
+        int result = executor::executeFile(testsDir + test.filename).asInt();
         cout << "Returned: " << result << ", Expected: " << test.expected << "\n";
         if (result != test.expected) {
             cout << "Test FAILED!\n";
