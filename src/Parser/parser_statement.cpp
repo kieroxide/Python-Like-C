@@ -22,47 +22,14 @@ unique_ptr<Node> Parser::parseStatement() {
         }
 
         case TokenType::IDENTIFIER: {
-            auto idToken = advance();
-            if (peek().type == TokenType::LPAREN) {
-                return parseFunctionCall();
-            } else if (peek().type == TokenType::LSQUARE) {
-                // Create a variable node first
-                auto varNode = make_unique<Node>(NodeType::VARIABLE, idToken, idToken.value);
-
-                // Parse the index to create index node
-                auto indexNode = parseIndex(varNode);
-
-                // If assignment follows, create assign node with index as left child
-                if (peek().type == TokenType::ASSIGN) {
-                    advance();  // consume =
-                    auto assignNode = make_unique<Node>(NodeType::ASSIGN, idToken, "ASSIGN");
-                    assignNode->addChild(move(indexNode)); 
-                    auto rhs = parseExpression();  // RHS = expression
-                    assignNode->addChild(move(rhs));
-                    return move(assignNode);
-                }
-
-                // Just returning the index expression for array access
-                return move(indexNode);
-            }
-
-            // Else we just assign the variable to a regular assignment
-            auto assignNode = make_unique<Node>(NodeType::ASSIGN, idToken.value);
-            auto variable = make_unique<Node>(NodeType::VARIABLE, idToken, idToken.value);
-            assignNode->addChild(move(variable));
-
-            auto statement = parseIdentifier();
-            if (statement) {
-                assignNode->addChild(move(statement));
-            }
-
-            return move(assignNode);
+            bool allowAssignment = true;
+            return parseIdentifier(allowAssignment);
         }
 
         case TokenType::IF: {
             advance();
-            auto ifStmt = parseIf();
-            return ifStmt;
+            return parseIf();
+            ;
         }
 
         case TokenType::DEF: {
@@ -76,14 +43,7 @@ unique_ptr<Node> Parser::parseStatement() {
         }
 
         case TokenType::RETURN: {
-            advance();
-            auto returnStmt = make_unique<Node>(NodeType::RETURN, token, "RETURN");
-
-            unique_ptr<Node> expression = parseExpression();
-            if (expression) {
-                returnStmt->addChild(move(expression));
-            }
-            return returnStmt;
+            return parseReturn();
         }
 
         default:
@@ -136,17 +96,6 @@ unique_ptr<Node> Parser::parseIf() {
 
     ifStmt->addChild(move(block));
     return ifStmt;
-}
-
-unique_ptr<Node> Parser::parseIdentifier() {
-    // If we see a '(' here, it's a function call
-    if (peek().type == TokenType::LPAREN) return parseFunctionCall();
-
-    // Otherwise, we expect an assignment
-    if (consume(TokenType::ASSIGN, "=")) {
-        return parseExpression();  // Parse right side of assignment
-    }
-    return nullptr;
 }
 
 unique_ptr<Node> Parser::parsePrint() {
@@ -203,5 +152,67 @@ unique_ptr<Node> Parser::parseIndex(unique_ptr<Node>& varNode) {
     indexNode->addChild(move(varNode));
     indexNode->addChild(move(index));
 
+    return move(indexNode);
+}
+
+unique_ptr<Node> Parser::parseIdentifier(bool allowAssignment) {
+    auto idToken = advance();
+    if (peek().type == TokenType::LPAREN) {
+        return parseFunctionCall();
+    } else if (peek().type == TokenType::LSQUARE) {
+        return parseIndexAccess(allowAssignment);
+    }
+
+    // Plain identifier
+    if (!allowAssignment) {
+        // Expression context -> just a VARIABLE node
+        return make_unique<Node>(NodeType::VARIABLE, idToken, idToken.value);
+    }
+
+    // Else we just assign the variable to a regular assignment
+    auto assignNode = make_unique<Node>(NodeType::ASSIGN, idToken.value);
+    auto variable = make_unique<Node>(NodeType::VARIABLE, idToken, idToken.value);
+    assignNode->addChild(move(variable));
+
+    if (consume(TokenType::ASSIGN, "=")) {
+        auto statement = parseExpression();  // Parse right side of assignment
+        if (statement) {
+            assignNode->addChild(move(statement));
+        }
+    }
+
+    return move(assignNode);
+}
+
+unique_ptr<Node> Parser::parseReturn() {
+    advance();
+    auto returnStmt = make_unique<Node>(NodeType::RETURN, "RETURN");
+
+    unique_ptr<Node> expression = parseExpression();
+    if (expression) {
+        returnStmt->addChild(move(expression));
+    }
+    return returnStmt;
+}
+
+unique_ptr<Node> Parser::parseIndexAccess(bool allowAssignment) {
+    auto idToken = current();
+    // Create a variable node first
+    auto varNode = make_unique<Node>(NodeType::VARIABLE, idToken, idToken.value);
+
+    // Parse the index to create index node
+    auto indexNode = parseIndex(varNode);
+
+    // If assignment follows, create assign node with index as left child
+    if (allowAssignment && peek().type == TokenType::ASSIGN) {
+        advance();  // consume =
+        auto assignNode = make_unique<Node>(NodeType::ASSIGN, idToken, "ASSIGN");
+        assignNode->addChild(move(indexNode));
+        auto rhs = parseExpression();  // RHS = expression
+        assignNode->addChild(move(rhs));
+        return move(assignNode);
+    }
+
+    // Just returning the index expression for array access
     return move(indexNode);
 }
