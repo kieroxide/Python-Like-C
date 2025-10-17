@@ -2,9 +2,11 @@
 #include <string>
 #include <unordered_map>
 
+#include "src/scope/value.hpp"
+
 class Scope {
    private:
-    std::unordered_map<std::string, int> variables;
+    std::unordered_map<std::string, Value> variables;
     Scope* parent;
 
    public:
@@ -12,6 +14,7 @@ class Scope {
 
     Scope* getParent();
 
-    void update(const std::string& variableName, const int value);
-    std::pair<bool, int> lookup(const std::string& name);
+    void updateArr(const std::string& variableName, const int index, const Value& value);
+    void update(const std::string& variableName, const Value value);
+    std::pair<bool, Value> lookup(const std::string& name);
 };

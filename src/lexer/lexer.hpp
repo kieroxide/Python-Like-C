@@ -14,6 +14,8 @@ enum class TokenType {
     COMMA,
     LBRACE,
     RBRACE,
+    LSQUARE,
+    RSQUARE,
     // Reserved Words
     PRINT,
     IF,

@@ -89,6 +89,16 @@ vector<Token> Lexer::tokenize_statement(const string& code) {
                 ++characterPosition;  // main loop consumes spaces
                 break;
 
+            case '[':
+                tokens.push_back({TokenType::LSQUARE, "[", lineNumber});
+                ++characterPosition;
+                break;
+
+            case ']':
+                tokens.push_back({TokenType::RSQUARE, "]", lineNumber});
+                ++characterPosition;
+                break;
+
             case '(':
                 tokens.push_back({TokenType::LPAREN, "(", lineNumber});
                 ++characterPosition;

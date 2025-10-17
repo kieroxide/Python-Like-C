@@ -18,6 +18,6 @@ class Interpreter {
    public:
     Interpreter() : currentScope(&globalScope) {};
     ~Interpreter();
-    int evaluate(const std::unique_ptr<Node>& node);
-    int evaluateFunctionCall(const std::unique_ptr<Node>& node);
+    Value evaluate(const std::unique_ptr<Node>& node);
+    Value evaluateFunctionCall(const std::unique_ptr<Node>& node);
 };

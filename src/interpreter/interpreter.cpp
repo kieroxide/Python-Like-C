@@ -27,7 +27,7 @@ void Interpreter::popScope() {
     }
 }
 
-int Interpreter::evaluate(const unique_ptr<Node>& node) {
+Value Interpreter::evaluate(const unique_ptr<Node>& node) {
     if (!node) {
         cerr << "ERROR: Attempted to evaluate null node" << endl;
         return 0;
@@ -35,7 +35,7 @@ int Interpreter::evaluate(const unique_ptr<Node>& node) {
     switch (node->type) {
         case NodeType::PROGRAM: {
             for (int i = 0; i < node->children.size(); i++) {
-                int val = evaluate(node->children[i]);
+                Value val = evaluate(node->children[i]);
                 if (node->children[i]->type == NodeType::RETURN) {
                     return val;
                 }
@@ -43,18 +43,20 @@ int Interpreter::evaluate(const unique_ptr<Node>& node) {
             return 0;
         }
 
-        case NodeType::WHILE:{
+        case NodeType::WHILE: {
             // Node will contain a conditional and a block
             const auto& conditional = node->children[0];
             const auto& block = node->children[1];
-            while(evaluate(conditional)){
-                evaluate(block);
+            Value last = 0;
+            while (evaluate(conditional).asInt()) {
+                last = evaluate(block);
             }
-            return 0;
+            return last;
         }
 
-        case NodeType::FUNC_CALL:
+        case NodeType::FUNC_CALL: {
             return evaluateFunctionCall(node);
+        }
 
         case NodeType::DEF: {
             string funcName = node->value;
@@ -62,15 +64,16 @@ int Interpreter::evaluate(const unique_ptr<Node>& node) {
             return 0;
         }
 
-        case NodeType::RETURN:
+        case NodeType::RETURN: {
             if (!node->children.empty()) {
                 return evaluate(node->children[0]);
             }
             return 0;
+        }
 
         case NodeType::BLOCK: {
             pushScope();
-            int result = 0;
+            Value result = 0;
 
             // Evaluate all statements in the block
             for (const auto& child : node->children) {
@@ -90,7 +93,7 @@ int Interpreter::evaluate(const unique_ptr<Node>& node) {
                 cerr << "ERROR: Malformed IF node at line " << node->token.lineNumber << endl;
                 return 0;
             }
-            int condition = evaluate(node->children[0]);
+            bool condition = evaluate(node->children[0]).asBool();
             if (condition != 0) {
                 evaluate(node->children[1]);
             }
@@ -98,21 +101,31 @@ int Interpreter::evaluate(const unique_ptr<Node>& node) {
         }
 
         case NodeType::CONDITIONAL: {
-            int left = evaluate(node->children[0]);
-            int right = evaluate(node->children[1]);
+            const Value& left = evaluate(node->children[0]);
+            const Value& right = evaluate(node->children[1]);
+
+            if (!(left.isInt() && right.isInt())) {
+                cerr << "ERROR: Invalid Comparison of Array '" << node->value << "' at line " << node->token.lineNumber
+                     << endl;
+                return 0;
+            }
+
+            const int leftInt = left.asInt();
+            const int rightInt = right.asInt();
+
             if (node->value == "==") {
-                return left == right;
+                return leftInt == rightInt;
             }
             if (node->value == "<") {
-                return left < right;
+                return leftInt < rightInt;
             }
             if (node->value == ">") {
-                return left > right;
+                return leftInt > rightInt;
             }
             return 0;
         }
 
-        case NodeType::NUMBER:
+        case NodeType::NUMBER: {
             try {
                 return stoi(node->value);
             } catch (const std::invalid_argument&) {
@@ -123,6 +136,17 @@ int Interpreter::evaluate(const unique_ptr<Node>& node) {
                 cerr << "ERROR: Number out of range '" << node->value << "' at line " << node->token.lineNumber << endl;
                 return 0;
             }
+        }
+
+        case NodeType::ARRAY: {
+            const int size = node->children.size();
+            vector<Value> arr;
+            arr.reserve(size);
+            for (const auto& child : node->children) {
+                arr.push_back(evaluate(child));
+            }
+            return Value(arr);
+        }
 
         case NodeType::VARIABLE: {
             auto varName = node->value;
@@ -135,8 +159,17 @@ int Interpreter::evaluate(const unique_ptr<Node>& node) {
         }
 
         case NodeType::OPERATOR: {
-            int left = evaluate(node->children[0]);
-            int right = evaluate(node->children[1]);
+            const Value& leftValue = evaluate(node->children[0]);
+            const Value& rightValue = evaluate(node->children[1]);
+
+            if (!(leftValue.isInt() && rightValue.isInt())) {
+                cerr << "ERROR: Invalid Operation of Array '" << node->value << "' at line " << node->token.lineNumber
+                     << endl;
+                return 0;
+            }
+            int left = leftValue.asInt();
+            int right = rightValue.asInt();
+
             if (node->value == "+") {
                 return left + right;
             }
@@ -158,16 +191,85 @@ int Interpreter::evaluate(const unique_ptr<Node>& node) {
         }
 
         case NodeType::PRINT: {
-            string result = to_string(evaluate(node->children[0]));
+            const Value& eval = evaluate(node->children[0]);
+            if (eval.isArray()) {
+                const auto& arr = eval.asArray();
+                cout << "[";
+                int lastIndex = arr.size() - 1;
+                for (int i = 0; i < arr.size(); i++) {
+                    cout << arr[i].asInt();
+                    if (!(i == lastIndex)) {
+                        cout << ",";
+                    }
+                }
+                cout << "]" << endl;
+                return 0;
+            }
+            string result = to_string(eval.asInt());
             cout << result << endl;
             return 0;
         }
 
         case NodeType::ASSIGN: {
-            string varName = node->token.value;
-            int value = evaluate(node->children[0]);
-            this->currentScope->update(varName, value);
-            return value;
+            // First, determine if this is a regular variable assignment or array index assignment
+            auto& target = node->children[0];
+            const Value value = evaluate(node->children[1]);
+
+            if (target->type == NodeType::VARIABLE) {
+                // Regular variable assignment
+                string varName = target->value;
+                this->currentScope->update(varName, value);
+                return value;
+            } else if (target->type == NodeType::INDEX) {
+                // Array index assignment
+                auto& baseNode = target->children[0];  // Should be a VARIABLE node
+                if (baseNode->type != NodeType::VARIABLE) {
+                    cerr << "ERROR: Cannot assign to non-variable expression" << endl;
+                    return 0;
+                }
+
+                string arrayName = baseNode->value;
+                auto lookupResult = this->currentScope->lookup(arrayName);
+
+                if (!lookupResult.first) {
+                    cerr << "ERROR: Variable '" << arrayName << "' not found at line " << node->token.lineNumber
+                         << endl;
+                    return 0;
+                }
+
+                Value arrayValue = lookupResult.second;
+                if (!arrayValue.isArray()) {
+                    cerr << "ERROR: '" << arrayName << "' is not an array at line " << node->token.lineNumber << endl;
+                    return 0;
+                }
+
+                Value indexValue = evaluate(target->children[1]);
+                if (!indexValue.isInt()) {
+                    cerr << "ERROR: Array index must be an integer at line " << node->token.lineNumber << endl;
+                    return 0;
+                }
+
+                int index = indexValue.asInt();
+                auto& array = arrayValue.asArray();
+
+                if (index < 0 || index >= array.size()) {
+                    cerr << "ERROR: Array index out of bounds at line " << node->token.lineNumber << endl;
+                    return 0;
+                }
+
+                array[index] = value;
+                this->currentScope->update(arrayName, arrayValue);  // Write back the modified array
+                return value;
+            } else {
+                cerr << "ERROR: Invalid assignment target at line " << node->token.lineNumber << endl;
+                return 0;
+            }
+        }
+
+        case NodeType::INDEX: {
+            const auto& variable = evaluate(node->children[0]);  // Evaluates variable
+            const auto& index = evaluate(node->children[1]);  // Evaluates index value
+            return variable.asArray()[index.asInt()];
         }
 
         default:
@@ -178,7 +280,7 @@ int Interpreter::evaluate(const unique_ptr<Node>& node) {
     return 0;
 }
 
-int Interpreter::evaluateFunctionCall(const unique_ptr<Node>& funcNode) {
+Value Interpreter::evaluateFunctionCall(const unique_ptr<Node>& funcNode) {
     auto functionInterpreter = std::make_unique<Interpreter>();
 
     // Check if function exists before accessing it
@@ -198,7 +300,7 @@ int Interpreter::evaluateFunctionCall(const unique_ptr<Node>& funcNode) {
     // Evaluate arguments from the call
     vector<int> argValues;
     for (const auto& argNode : funcNode->children) {
-        argValues.push_back(this->evaluate(argNode));
+        argValues.push_back(this->evaluate(argNode).asInt());
     }
 
     // Check parameter count
