@@ -96,10 +96,13 @@ class Parser {
     std::unique_ptr<Node> parseIndexExpr();
     std::unique_ptr<Node> parseStatement();
     std::unique_ptr<Node> parsePrint();
-    std::unique_ptr<Node> parseIdentifier();
+    std::unique_ptr<Node> parseIdentifier(bool allowAssignment);
     std::unique_ptr<Node> parseIf();
     std::unique_ptr<Node> parseConditional();
     std::unique_ptr<Node> parseExpression();
     std::unique_ptr<Node> parseTerm();
+    std::unique_ptr<Node> parseReturn();
+    std::unique_ptr<Node> parseIndexAccess(bool allowAssignment);
     std::unique_ptr<Node> parseFactor();
+    std::unique_ptr<Node> parseArray();
 };
