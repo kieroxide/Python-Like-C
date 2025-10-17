@@ -48,7 +48,9 @@ Value Interpreter::evaluate(const unique_ptr<Node>& node) {
             const auto& conditional = node->children[0];
             const auto& block = node->children[1];
             Value last = 0;
-            while (evaluate(conditional).asInt()) {
+            
+            
+            while (evaluate(conditional).asInt() == 1) {
                 last = evaluate(block);
             }
             return last;
@@ -93,8 +95,8 @@ Value Interpreter::evaluate(const unique_ptr<Node>& node) {
                 cerr << "ERROR: Malformed IF node at line " << node->token.lineNumber << endl;
                 return 0;
             }
-            bool condition = evaluate(node->children[0]).asBool();
-            if (condition != 0) {
+            bool condition = evaluate(node->children[0]).asInt();
+            if (condition == 1) {
                 evaluate(node->children[1]);
             }
             return 0;
