@@ -20,8 +20,8 @@ int executeFile(std::string filePath) {
     auto ast = parser->parseProgram(tokens);
 
     auto interpreter = make_unique<Interpreter>();
-    int result = interpreter->evaluate(ast);
-
-    return result;
+    auto result = interpreter->evaluate(ast);
+    return 0;
+    //return result;
 }
 }  // namespace executor
