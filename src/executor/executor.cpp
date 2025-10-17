@@ -5,11 +5,12 @@
 #include "src/parser/parser.hpp"
 #include "src/utility/utility.hpp"
 
+
 using namespace std;
 
 namespace executor {
 
-int executeFile(std::string filePath) {
+Value executeFile(std::string filePath) {
     string fileContents = utility::readFile(filePath);
     string fileContentsFormatted = utility::convertTabs(fileContents);
 
@@ -20,8 +21,7 @@ int executeFile(std::string filePath) {
     auto ast = parser->parseProgram(tokens);
 
     auto interpreter = make_unique<Interpreter>();
-    auto result = interpreter->evaluate(ast);
-    return 0;
-    //return result;
+    Value result = interpreter->evaluate(ast);
+    return result;
 }
 }  // namespace executor

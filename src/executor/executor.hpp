@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
+#include "src/scope/value.hpp"
 
 namespace executor {
-int executeFile(std::string filePath);
+Value executeFile(std::string filePath);
 }
