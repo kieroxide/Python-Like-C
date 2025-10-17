@@ -62,41 +62,13 @@ unique_ptr<Node> Parser::parseFactor() {
     }
     const auto& type = peek().type;
     if (type == TokenType::LSQUARE) {
-        auto array = make_unique<Node>(NodeType::ARRAY, "[]");
-        if (!consume(TokenType::LSQUARE, "[")) return nullptr;
-        // its an array
-        bool first = true;
-        while (peek().type != TokenType::RSQUARE && peek().type != TokenType::_EOF) {
-            // Handle comma between parameters (but not before first param)
-            if (!first) {
-                if (!consume(TokenType::COMMA, ",")) return nullptr;
-            }
-
-            auto expr = parseExpression();
-            // Create parameter node and add to array node
-            if (!expr) return nullptr;
-
-            array->addChild(move(expr));
-
-            first = false;
-        }
-        if (!consume(TokenType::RSQUARE, "]")) return nullptr;
-        return move(array);
+        return parseArray();
     } else if (type == TokenType::NUMBER) {
         auto numToken = advance();
         return make_unique<Node>(NodeType::NUMBER, numToken, numToken.value);
     } else if (type == TokenType::IDENTIFIER) {
-        Token identifier = advance();
-        // Check if this is a function call
-        if (peek().type == TokenType::LPAREN) return parseFunctionCall();
-
-        auto varNode = make_unique<Node>(NodeType::VARIABLE, identifier, identifier.value);
-        
-        // Check if this is a index operation
-        if (peek().type == TokenType::LSQUARE) return move(parseIndex(varNode));
-
-        // Otherwise it's just a variable
-        return varNode;
+        bool allowAssignment = false;
+        return parseIdentifier(allowAssignment);
     } else {
         auto token = peek();
         cerr << "Error: Expected number or identifier, found '" << token.value << "' at line " << token.lineNumber
@@ -138,4 +110,27 @@ unique_ptr<Node> Parser::parseConditional() {
     }
 
     return node;
+}
+
+unique_ptr<Node> Parser::parseArray() {
+    auto array = make_unique<Node>(NodeType::ARRAY, "[]");
+    if (!consume(TokenType::LSQUARE, "[")) return nullptr;
+    // its an array
+    bool first = true;
+    while (peek().type != TokenType::RSQUARE && peek().type != TokenType::_EOF) {
+        // Handle comma between parameters (but not before first param)
+        if (!first) {
+            if (!consume(TokenType::COMMA, ",")) return nullptr;
+        }
+
+        auto expr = parseExpression();
+        // Create parameter node and add to array node
+        if (!expr) return nullptr;
+
+        array->addChild(move(expr));
+
+        first = false;
+    }
+    if (!consume(TokenType::RSQUARE, "]")) return nullptr;
+    return move(array);
 }
