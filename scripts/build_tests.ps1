@@ -27,17 +27,23 @@ $cxx = "g++"
 $cxxflags = @("-std=c++17", "-O2", "-g")
 $includeFlags = @("-I.", "-DRUN_TESTS")
 
-# gather source files under src
-$srcFiles = Get-ChildItem -Path (Join-Path $repoRoot "src") -Recurse -Filter *.cpp | ForEach-Object { $_.FullName }
+# gather source files under src - EXCLUDE main.cpp for tests
+$srcFiles = Get-ChildItem -Path (Join-Path $repoRoot "src") -Recurse -Filter *.cpp | 
+Where-Object { $_.Name -ne "main.cpp" } | 
+ForEach-Object { $_.FullName }
 
 # add test runner(s)
-$testRunners = Get-ChildItem -Path (Join-Path $repoRoot "tests" "src") -Recurse -Filter *.cpp -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }
+$testRunners = Get-ChildItem -Path (Join-Path $repoRoot "tests") -Recurse -Filter *.cpp -ErrorAction SilentlyContinue | 
+ForEach-Object { $_.FullName }
+
 $allSources = @($srcFiles) + @($testRunners)
 
 if ($allSources.Count -eq 0) {
     Write-Error "No source files found for tests"
     Pop-Location; exit 1
 }
+
+Write-Host "Found $($allSources.Count) source files to compile"
 
 function Get-ObjPath($srcFull) {
     $rel = $srcFull.Substring($repoRoot.Length).TrimStart('\', '/')
@@ -52,6 +58,9 @@ foreach ($src in $allSources) {
         Write-Host "Compiling $src -> $obj"
         & $cxx $cxxflags $includeFlags -c $src -o $obj
         if ($LASTEXITCODE -ne 0) { Write-Error "Failed compiling $src"; Pop-Location; exit $LASTEXITCODE }
+    }
+    else {
+        Write-Host "Skipping $src (up to date)"
     }
 }
 
