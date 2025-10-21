@@ -15,6 +15,6 @@ int main(int argc, char* argv[]) {
     if(response.isArray()){
        cout << "Script returned array of size " << response.asArray().size();
     }
-    cout << "Script returned" << response.asInt();
+    cout << "Script returned " << response.asInt();
     return response.asInt();
 }
