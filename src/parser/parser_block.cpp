@@ -74,24 +74,73 @@ bool Parser::parseParams(unique_ptr<Node>& funcNode) {
 unique_ptr<Node> Parser::parseIndentedBlock() {
     auto block = make_unique<Node>(NodeType::BLOCK, "BLOCK");
 
-    // Each INDENT introduces one statement
-    while (match(TokenType::INDENT)) {
-        while (match(TokenType::NEWLINE));
+    // Count the expected indentation level by peeking ahead
+    size_t expectedIndentLevel = 0;
 
-        auto child = parseStatement();
-        if (child) {
-            block->addChild(move(child));
-        } else {
-            // recover: advance one token to avoid infinite loop
-            if (tokenPosition < tokenLength) {
-                ++tokenPosition;
-            } else {
-                break;
-            }
+    // Look ahead to count indentation without consuming
+    while (peek().type == TokenType::INDENT) {
+        // Count this indent level but don't consume yet
+        size_t tempPos = tokenPosition;
+        size_t indentCount = 0;
+
+        while (tempPos < tokenLength && getTokens()[tempPos].type == TokenType::INDENT) {
+            indentCount++;
+            tempPos++;
         }
 
-        // consume trailing newlines after the statement
-        while (match(TokenType::NEWLINE));
+        expectedIndentLevel = indentCount;
+        break;  // We just need the first line's indent count
+    }
+
+    // If no indentation found, return empty block
+    if (expectedIndentLevel == 0) {
+        return block;
+    }
+
+    // Parse statements at this indentation level
+    while (peek().type != TokenType::_EOF) {
+        // Count current line's indentation level
+        size_t currentIndentLevel = 0;
+
+        // Peek ahead to count indents on this line
+        size_t tempPos = tokenPosition;
+        while (tempPos < tokenLength && getTokens()[tempPos].type == TokenType::INDENT) {
+            currentIndentLevel++;
+            tempPos++;
+        }
+
+        // If we hit a line with less indentation, we're done with this block
+        if (currentIndentLevel < expectedIndentLevel) {
+            break;
+        }
+
+        // If this line is at our level, consume the indents and parse it
+        if (currentIndentLevel == expectedIndentLevel) {
+            // Consume the INDENT tokens using match()
+            for (size_t i = 0; i < expectedIndentLevel; i++) {
+                if (!match(TokenType::INDENT)) {
+                    // Shouldn't happen, but safety check
+                    break;
+                }
+            }
+
+            // Skip any newlines before the statement
+            while (match(TokenType::NEWLINE));
+
+            auto child = parseStatement();
+            if (child) {
+                block->addChild(move(child));
+            } else {
+                // recover: try to advance to avoid infinite loop
+                advance();
+            }
+
+            // consume trailing newlines after the statement
+            while (match(TokenType::NEWLINE));
+        } else {
+            // Line is more indented - this will be handled by nested blocks
+            break;
+        }
     }
 
     return block;
